@@ -10,6 +10,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -222,4 +223,42 @@ func (self *PullRequestsHelper) PullRequestOfCommitFiles() (*models.GithubPullRe
 	}
 
 	return nil, ""
+}
+
+// WithReviewComments calls f with the pull request's review comments, loading
+// them in the background first unless they're loaded already. f is called on
+// the UI thread, and not at all if loading them fails.
+func (self *PullRequestsHelper) WithReviewComments(pr *models.GithubPullRequest, f func([]*models.PullRequestReviewComment)) {
+	state := &self.c.Model().PullRequestListState
+	if cached, ok := state.ReviewComments[pr.Number]; ok && cached.PullRequestUpdatedAt.Equal(pr.UpdatedAt) {
+		f(cached.Comments)
+		return
+	}
+
+	repo := *state.Repo
+	generation := self.c.State().GetRepoGeneration()
+	self.c.OnWorkerBackground(func(gocui.Task) error {
+		comments, err := self.c.Git().GitHub.ListPullRequestReviewComments(repo, pr.Number)
+		if err != nil {
+			self.c.Log.Error(err)
+			return nil
+		}
+
+		self.c.OnUIThreadBackground(func() error {
+			if self.c.State().GetRepoGeneration() != generation {
+				return nil
+			}
+
+			if state.ReviewComments == nil {
+				state.ReviewComments = map[int]*types.PullRequestReviewComments{}
+			}
+			state.ReviewComments[pr.Number] = &types.PullRequestReviewComments{
+				PullRequestUpdatedAt: pr.UpdatedAt,
+				Comments:             comments,
+			}
+			f(comments)
+			return nil
+		})
+		return nil
+	})
 }

@@ -321,3 +321,29 @@ func TestListAssignableUsersAndLabels(t *testing.T) {
 	assert.Equal(t, []string{}, labels)
 	runner.CheckForMissingCalls()
 }
+
+func TestListPullRequestReviewComments(t *testing.T) {
+	t.Setenv("GH_PATH", "gh")
+
+	pages := `[{"id": 1, "in_reply_to_id": null, "path": "main.go", "line": 7, "diff_hunk": "@@ -1 +1 @@\n-a\n+b", "body": "Why?", "created_at": "2026-09-16T10:00:00Z", "user": {"login": "alice"}}]
+[{"id": 2, "in_reply_to_id": 1, "path": "main.go", "line": null, "diff_hunk": "@@ -1 +1 @@\n-a\n+b", "body": "Because", "created_at": "2026-09-16T11:00:00Z", "user": {"login": "bob"}}]
+`
+	runner := oscommands.NewFakeRunner(t).
+		ExpectArgs([]string{"gh", "api", "--hostname", "github.com", "--paginate", "repos/jesseduffield/lazygit/pulls/12/comments"}, pages, nil)
+	instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+	comments, err := instance.ListPullRequestReviewComments(testGithubRepo, 12)
+	assert.NoError(t, err)
+	runner.CheckForMissingCalls()
+
+	assert.Equal(t, []*models.PullRequestReviewComment{
+		{
+			ID: 1, Path: "main.go", Line: 7, DiffHunk: "@@ -1 +1 @@\n-a\n+b", Author: "alice", Body: "Why?",
+			CreatedAt: time.Date(2026, 9, 16, 10, 0, 0, 0, time.UTC),
+		},
+		{
+			ID: 2, InReplyToID: 1, Path: "main.go", DiffHunk: "@@ -1 +1 @@\n-a\n+b", Author: "bob", Body: "Because",
+			CreatedAt: time.Date(2026, 9, 16, 11, 0, 0, 0, time.UTC),
+		},
+	}, comments)
+}

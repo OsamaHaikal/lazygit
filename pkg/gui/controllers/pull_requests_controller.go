@@ -9,6 +9,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
+	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 	"github.com/samber/lo"
@@ -149,12 +150,44 @@ func (self *PullRequestsController) GetOnFocus() func(types.OnFocusOpts) {
 
 func (self *PullRequestsController) GetOnRenderToMain() func() {
 	return func() {
+		pr := self.context().GetSelected()
+		if pr == nil || pr.ReviewThreadCount == 0 {
+			self.c.RenderToMainViews(types.RefreshMainOpts{
+				Pair: self.c.MainViewPairs().Normal,
+				Main: &types.ViewUpdateOpts{
+					Title: self.c.Tr.PullRequestsTitle,
+					Task:  self.mainViewTask(),
+				},
+			})
+			return
+		}
+
+		// The review comments on the code aren't part of what gh shows for a
+		// pull request, so show them below it once they're loaded.
+		reviewCommentsView := func(content string) *types.ViewUpdateOpts {
+			return &types.ViewUpdateOpts{
+				Title: self.c.Tr.ReviewCommentsTitle,
+				Task:  types.NewRenderStringTask(content),
+			}
+		}
 		self.c.RenderToMainViews(types.RefreshMainOpts{
 			Pair: self.c.MainViewPairs().Normal,
 			Main: &types.ViewUpdateOpts{
 				Title: self.c.Tr.PullRequestsTitle,
 				Task:  self.mainViewTask(),
 			},
+			Secondary: reviewCommentsView(self.c.Tr.LoadingReviewComments),
+		})
+
+		self.c.Helpers().PullRequests.WithReviewComments(pr, func(comments []*models.PullRequestReviewComment) {
+			if self.context().GetSelected() != pr || self.c.Context().CurrentSide() != self.context() {
+				return
+			}
+
+			self.c.RenderToMainViews(types.RefreshMainOpts{
+				Pair:      self.c.MainViewPairs().Normal,
+				Secondary: reviewCommentsView(presentation.FormatPullRequestReviewComments(comments, self.c.Tr)),
+			})
 		})
 	}
 }

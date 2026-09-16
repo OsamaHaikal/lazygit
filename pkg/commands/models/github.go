@@ -31,6 +31,23 @@ type GithubPullRequest struct {
 	// reviewed yet
 	ReviewRequests []string
 	Labels         []string
+	// The number of review comment threads on the pull request's code
+	ReviewThreadCount int
+}
+
+// A comment on lines of a pull request's diff, either starting a thread or
+// replying to the comment that did
+type PullRequestReviewComment struct {
+	ID          int
+	InReplyToID int
+	Path        string
+	// The last commented line, or 0 if the comment is on a version of the file
+	// whose lines are no longer part of the diff
+	Line      int
+	DiffHunk  string
+	Author    string
+	Body      string
+	CreatedAt time.Time
 }
 
 func (pr *GithubPullRequest) ID() string {

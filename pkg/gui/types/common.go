@@ -415,6 +415,16 @@ type PullRequestListState struct {
 	// Incremented whenever a load starts, so that a load can tell whether a
 	// newer one has been started since, and drop its result if so.
 	LoadID int
+	// The review comments of the pull requests they have been loaded for, by
+	// pull request number
+	ReviewComments map[int]*PullRequestReviewComments
+}
+
+type PullRequestReviewComments struct {
+	// When the pull request had last been updated when the comments were
+	// loaded; they need loading again once it's been updated since
+	PullRequestUpdatedAt time.Time
+	Comments             []*models.PullRequestReviewComment
 }
 
 type Mutexes struct {

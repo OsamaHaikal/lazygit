@@ -442,6 +442,9 @@ type TranslationSet struct {
 	NoAssignees                           string
 	NoLabels                              string
 	LoadingSuggestions                    string
+	ReviewCommentsTitle                   string
+	Outdated                              string
+	LoadingReviewComments                 string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1694,6 +1697,9 @@ func EnglishTranslationSet() *TranslationSet {
 		NoAssignees:                          "Nobody is assigned",
 		NoLabels:                             "There are no labels",
 		LoadingSuggestions:                   "Loading suggestions",
+		ReviewCommentsTitle:                  "Review comments",
+		Outdated:                             "outdated",
+		LoadingReviewComments:                "Loading review comments...",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

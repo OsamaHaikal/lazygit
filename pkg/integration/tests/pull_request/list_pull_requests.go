@@ -21,10 +21,20 @@ var ListPullRequests = NewIntegrationTest(NewIntegrationTestArgs{
 			)
 
 		t.Views().Main().Content(Contains("Viewing pull request 12"))
+		t.Views().Secondary().Content(
+			Contains("main.go:7").
+				Contains("-old line").
+				Contains("+new line").
+				Contains("carol").
+				Contains("Why this change?").
+				Contains("alice").
+				Contains("It reads better"),
+		)
 
 		t.Views().PullRequests().
 			SelectNextItem()
 
 		t.Views().Main().Content(Contains("Viewing pull request 11"))
+		t.Views().Secondary().IsInvisible()
 	},
 })

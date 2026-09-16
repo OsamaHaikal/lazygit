@@ -7,8 +7,8 @@ import (
 
 // The pull requests panel talks to GitHub through gh, so the tests put a fake
 // gh in its place. It answers the GraphQL query with pullRequestsJson, prints a
-// placeholder for `gh pr view`, lists some users and labels as suggestions, and
-// appends the arguments of every other
+// placeholder for `gh pr view`, returns reviewCommentsJson for #12's review
+// comments, lists some users and labels as suggestions, and appends the arguments of every other
 // invocation to gh-calls.txt in the repo so tests can check what was run. The
 // search query of each GraphQL request goes to gh-searches.txt.
 //
@@ -47,7 +47,8 @@ const pullRequestsJson = `{"data":{"search":{"nodes":[
 		"headRepositoryOwner": {"login": "owner"},
 		"comments": {"totalCount": 0},
 		"commits": {"nodes": [{"commit": {"statusCheckRollup": {"state": "SUCCESS"}}}]},
-		"labels": {"nodes": [{"name": "enhancement"}]}
+		"labels": {"nodes": [{"name": "enhancement"}]},
+		"reviewThreads": {"totalCount": 1}
 	},
 	{
 		"number": 11,
@@ -67,13 +68,27 @@ const pullRequestsJson = `{"data":{"search":{"nodes":[
 	}
 ]}}}`
 
+const reviewCommentsJson = `[
+	{"id": 1, "path": "main.go", "line": 7, "diff_hunk": "@@ -5,3 +5,3 @@\n context\n-old line\n+new line", "body": "Why this change?", "created_at": "2026-09-16T10:00:00Z", "user": {"login": "carol"}},
+	{"id": 2, "in_reply_to_id": 1, "path": "main.go", "line": 7, "diff_hunk": "@@ -5,3 +5,3 @@\n context\n-old line\n+new line", "body": "It reads better", "created_at": "2026-09-16T11:00:00Z", "user": {"login": "alice"}}
+]`
+
 func setupGhRepo(shell *Shell) {
 	shell.EmptyCommit("initial")
 	shell.RunCommand([]string{"git", "remote", "add", "origin", "https://github.invalid/owner/repo.git"})
 
 	shell.CreateFile("../bin/pull_requests.json", pullRequestsJson)
+	shell.CreateFile("../bin/review_comments.json", reviewCommentsJson)
 	shell.CreateFile("../bin/gh", `#!/bin/sh
 case "$*" in
+*"--method POST"*)
+    echo "$@" >> gh-calls.txt
+    exit 0
+    ;;
+*/pulls/12/comments*)
+    cat "$(dirname "$0")/review_comments.json"
+    exit 0
+    ;;
 */assignees*)
     printf "alice\ncarol\n"
     exit 0

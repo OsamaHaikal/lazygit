@@ -60,6 +60,7 @@ var listPullRequestsQuery = fmt.Sprintf(`query($q: String!) {
         assignees(first: 20) { nodes { login } }
         reviewRequests(first: 20) { nodes { requestedReviewer { ... on User { login } ... on Team { combinedSlug } } } }
         labels(first: 20) { nodes { name } }
+        reviewThreads { totalCount }
         commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
       }
     }
@@ -160,6 +161,9 @@ type pullRequestListNode struct {
 	Labels struct {
 		Nodes []pullRequestLabelNode `json:"nodes"`
 	} `json:"labels"`
+	ReviewThreads struct {
+		TotalCount int `json:"totalCount"`
+	} `json:"reviewThreads"`
 }
 
 type pullRequestReviewRequestNode struct {
@@ -219,6 +223,7 @@ func parsePullRequestListResponse(respBytes []byte) ([]*models.GithubPullRequest
 			Labels: lo.Map(node.Labels.Nodes, func(label pullRequestLabelNode, _ int) string {
 				return label.Name
 			}),
+			ReviewThreadCount: node.ReviewThreads.TotalCount,
 		}, true
 	}), nil
 }
@@ -439,4 +444,63 @@ func (self *GitHubCommands) runGhForLines(args ...string) ([]string, error) {
 	}
 
 	return lo.Compact(strings.Split(strings.TrimSpace(output), "\n")), nil
+}
+
+type reviewCommentNode struct {
+	ID          int       `json:"id"`
+	InReplyToID int       `json:"in_reply_to_id"`
+	Path        string    `json:"path"`
+	Line        int       `json:"line"`
+	DiffHunk    string    `json:"diff_hunk"`
+	Body        string    `json:"body"`
+	CreatedAt   time.Time `json:"created_at"`
+	User        struct {
+		Login string `json:"login"`
+	} `json:"user"`
+}
+
+// ListPullRequestReviewComments returns the comments on lines of the pull
+// request's diff, oldest first.
+func (self *GitHubCommands) ListPullRequestReviewComments(repo hosting_service.ServiceInfo, number int) ([]*models.PullRequestReviewComment, error) {
+	cmdObj, err := self.ghCmdObj(
+		"api", "--hostname", repo.WebDomain, "--paginate",
+		fmt.Sprintf("repos/%s/pulls/%d/comments", repo.RepoName, number),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := cmdObj.DontLog().RunWithOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	return parseReviewComments(output)
+}
+
+func parseReviewComments(output string) ([]*models.PullRequestReviewComment, error) {
+	// With --paginate, gh prints each page's JSON array one after the other
+	comments := []*models.PullRequestReviewComment{}
+	decoder := json.NewDecoder(strings.NewReader(output))
+	for decoder.More() {
+		var page []reviewCommentNode
+		if err := decoder.Decode(&page); err != nil {
+			return nil, err
+		}
+
+		for _, node := range page {
+			comments = append(comments, &models.PullRequestReviewComment{
+				ID:          node.ID,
+				InReplyToID: node.InReplyToID,
+				Path:        node.Path,
+				Line:        node.Line,
+				DiffHunk:    node.DiffHunk,
+				Author:      node.User.Login,
+				Body:        node.Body,
+				CreatedAt:   node.CreatedAt,
+			})
+		}
+	}
+
+	return comments, nil
 }
