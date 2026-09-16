@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type GithubPullRequest struct {
 	HeadRefName         string                `json:"headRefName"`
 	Number              int                   `json:"number"`
@@ -8,6 +10,19 @@ type GithubPullRequest struct {
 	ChecksState         string                `json:"checksState"`
 	Url                 string                `json:"url"`
 	HeadRepositoryOwner GithubRepositoryOwner `json:"headRepositoryOwner"`
+
+	// The fields below are only filled in for the pull requests listed in the
+	// pull requests panel, not for the ones matched up with local branches.
+	Author         string
+	BaseRefName    string
+	HeadRefOid     string
+	BaseRefOid     string
+	ReviewDecision string // "APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED", or empty
+	Additions      int
+	Deletions      int
+	ChangedFiles   int
+	CommentCount   int
+	UpdatedAt      time.Time
 }
 
 func (pr *GithubPullRequest) UserName() string {
