@@ -425,6 +425,18 @@ git:
     - master
     - main
 
+  # Config relating to the AI-written guides to pull requests, which walk you
+  # through a pull request's changes chapter by chapter
+  pullRequestGuide:
+    # The AI coding agent that writes the guides: 'codex' (the Codex CLI), 'claude'
+    # (Claude Code), or 'auto' to use Codex if it's installed and Claude Code
+    # otherwise.
+    provider: auto
+
+    # The model to write the guides with, in the form the provider's --model flag
+    # takes. Leave empty to use the provider's default model.
+    model: ""
+
   # Prefix to use when skipping hooks. E.g. if set to 'WIP', then pre-commit hooks
   # will be skipped when the commit message starts with 'WIP'
   skipHookPrefix: WIP
@@ -833,6 +845,7 @@ keybinding:
     filter: f
     viewFiles: F
     edit: e
+    guide: g
   commitMessage:
     commitMenu: <ctrl+o>
 ```

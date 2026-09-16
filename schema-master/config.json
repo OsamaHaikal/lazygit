@@ -387,6 +387,10 @@
             "main"
           ]
         },
+        "pullRequestGuide": {
+          "$ref": "#/$defs/PullRequestGuideConfig",
+          "description": "Config relating to the AI-written guides to pull requests, which walk you through a pull request's changes chapter by chapter"
+        },
         "skipHookPrefix": {
           "type": "string",
           "description": "Prefix to use when skipping hooks. E.g. if set to 'WIP', then pre-commit hooks will be skipped when the commit message starts with 'WIP'",
@@ -2204,6 +2208,20 @@
             }
           ],
           "default": "e"
+        },
+        "guide": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "g"
         }
       },
       "additionalProperties": false,
@@ -3709,6 +3727,27 @@
       "additionalProperties": false,
       "type": "object",
       "description": "Config relating to things outside of Lazygit like how files are opened, copying to clipboard, etc"
+    },
+    "PullRequestGuideConfig": {
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "codex",
+            "claude"
+          ],
+          "description": "The AI coding agent that writes the guides: 'codex' (the Codex CLI), 'claude' (Claude Code), or 'auto' to use Codex if it's installed and Claude Code otherwise.",
+          "default": "auto"
+        },
+        "model": {
+          "type": "string",
+          "description": "The model to write the guides with, in the form the provider's --model flag takes. Leave empty to use the provider's default model."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "description": "Config relating to the AI-written guides to pull requests, which walk you through a pull request's changes chapter by chapter"
     },
     "RefresherConfig": {
       "properties": {

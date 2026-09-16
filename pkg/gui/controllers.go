@@ -174,6 +174,7 @@ func (gui *Gui) resetHelpersAndControllers() {
 	)
 	worktreesController := controllers.NewWorktreesController(common)
 	pullRequestsController := controllers.NewPullRequestsController(common)
+	pullRequestGuideController := controllers.NewPullRequestGuideController(common)
 	undoController := controllers.NewUndoController(common)
 	globalController := controllers.NewGlobalController(common)
 	contextLinesController := controllers.NewContextLinesController(common)
@@ -220,6 +221,7 @@ func (gui *Gui) resetHelpersAndControllers() {
 		gui.State.Contexts.Remotes,
 		gui.State.Contexts.Worktrees,
 		gui.State.Contexts.PullRequests,
+		gui.State.Contexts.PullRequestGuide,
 		gui.State.Contexts.Tags,
 		gui.State.Contexts.Branches,
 		gui.State.Contexts.RemoteBranches,
@@ -364,6 +366,11 @@ func (gui *Gui) resetHelpersAndControllers() {
 
 	controllers.AttachControllers(gui.State.Contexts.PullRequests,
 		pullRequestsController,
+	)
+
+	controllers.AttachControllers(gui.State.Contexts.PullRequestGuide,
+		pullRequestGuideController,
+		controllers.NewSwitchToFocusedMainViewController(common, gui.State.Contexts.PullRequestGuide),
 	)
 
 	controllers.AttachControllers(gui.State.Contexts.Stash,

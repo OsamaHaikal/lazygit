@@ -47,6 +47,14 @@ func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) [
 			Description:       self.c.Tr.ViewPullRequestCommits,
 		},
 		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.Guide),
+			Handler:           self.withItem(self.guide),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.OpenPullRequestGuide,
+			Tooltip:           self.c.Tr.OpenPullRequestGuideTooltip,
+			DisplayOnScreen:   true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.PullRequests.ViewFiles),
 			Handler:           self.withItem(self.viewFiles),
 			GetDisabledReason: self.require(self.singleItemSelected()),
@@ -231,6 +239,13 @@ func (self *PullRequestsController) viewFiles(pr *models.GithubPullRequest) erro
 			Ref:     head,
 			Context: self.context(),
 		})
+		return nil
+	})
+}
+
+func (self *PullRequestsController) guide(pr *models.GithubPullRequest) error {
+	return self.withPullRequestHead(pr, func(head *models.PullRequestHead) error {
+		self.c.Helpers().PullRequests.ShowGuide(pr, head)
 		return nil
 	})
 }

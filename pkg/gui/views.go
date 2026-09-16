@@ -40,6 +40,7 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 		{viewPtr: &gui.Views.Commits, name: "commits"},
 		{viewPtr: &gui.Views.Stash, name: "stash"},
 		{viewPtr: &gui.Views.SubCommits, name: "subCommits"},
+		{viewPtr: &gui.Views.PullRequestGuide, name: "pullRequestGuide"},
 		{viewPtr: &gui.Views.CommitFiles, name: "commitFiles"},
 
 		{viewPtr: &gui.Views.Staging, name: "staging"},
@@ -219,6 +220,7 @@ func (gui *Gui) configureViewProperties() {
 	gui.Views.Remotes.Title = gui.c.Tr.RemotesTitle
 	gui.Views.Worktrees.Title = gui.c.Tr.WorktreesTitle
 	gui.Views.PullRequests.Title = gui.c.Tr.PullRequestsTitle
+	gui.Views.PullRequestGuide.Title = gui.c.Tr.PullRequestGuideTitle
 	gui.Views.Submodules.Title = gui.c.Tr.SubmodulesTitle
 	gui.Views.Tags.Title = gui.c.Tr.TagsTitle
 	gui.Views.Files.Title = gui.c.Tr.FilesTitle

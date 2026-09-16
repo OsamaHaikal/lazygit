@@ -58,6 +58,10 @@ func (self *Views) PullRequests() *ViewDriver {
 	return self.regularView("pullRequests")
 }
 
+func (self *Views) PullRequestGuide() *ViewDriver {
+	return self.regularView("pullRequestGuide")
+}
+
 func (self *Views) Status() *ViewDriver {
 	return self.regularView("status")
 }

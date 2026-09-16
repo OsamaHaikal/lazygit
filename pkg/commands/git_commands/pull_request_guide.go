@@ -1,6 +1,8 @@
 package git_commands
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -142,6 +144,11 @@ type PullRequestGuide struct {
 	Model    string         `json:"model"`
 }
 
+// ID identifies a chapter within its guide, for showing chapters in a list
+func (self *GuideChapter) ID() string {
+	return self.Title
+}
+
 type GuideChapter struct {
 	Title       string   `json:"title"`
 	Explanation string   `json:"explanation"`
@@ -167,6 +174,21 @@ type GeneratePullRequestGuideOpts struct {
 	Description string
 	MergeBase   string
 	Head        string
+}
+
+// GuideCacheKey returns a key that identifies the guide that generating one
+// with the given options would produce: a guide for the same changes and
+// description, from the same provider, model, and prompt.
+func GuideCacheKey(opts GeneratePullRequestGuideOpts) string {
+	hash := sha256.New()
+	for _, part := range []string{
+		opts.Provider, opts.Model, opts.MergeBase, opts.Head, opts.Title, opts.Description, guidePrompt, guideSchema,
+	} {
+		// Include the lengths so that different splits of the same text don't
+		// collide
+		fmt.Fprintf(hash, "%d:%s", len(part), part)
+	}
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 // ResolveGuideProvider turns the configured provider into the one to use:

@@ -445,6 +445,19 @@ type TranslationSet struct {
 	ReviewCommentsTitle                   string
 	Outdated                              string
 	LoadingReviewComments                 string
+	PullRequestGuideTitle                 string
+	OpenPullRequestGuide                  string
+	OpenPullRequestGuideTooltip           string
+	WritingPullRequestGuide               string
+	PullRequestGuideFailed                string
+	PullRequestGuideReady                 string
+	NoGuideProvider                       string
+	RegeneratePullRequestGuide            string
+	RegeneratePullRequestGuideTitle       string
+	RegeneratePullRequestGuidePrompt      string
+	PullRequestGuideWrittenBy             string
+	PullRequestGuideWrittenByModel        string
+	PullRequestGuideStillBeingWritten     string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1700,6 +1713,19 @@ func EnglishTranslationSet() *TranslationSet {
 		ReviewCommentsTitle:                  "Review comments",
 		Outdated:                             "outdated",
 		LoadingReviewComments:                "Loading review comments...",
+		PullRequestGuideTitle:                "Guide",
+		OpenPullRequestGuide:                 "AI guide",
+		OpenPullRequestGuideTooltip:          "Show an AI-written walkthrough of the pull request's changes: chapters that each explain a logical part of the change, with the hunks that make it up. Written by Codex or Claude Code (see git.pullRequestGuide in the config); the pull request's description and diff are sent to it.",
+		WritingPullRequestGuide:              "{{.provider}} is writing a guide to #{{.number}} ({{.elapsed}})...\n\nThis can take a few minutes. You can keep using lazygit meanwhile; the guide will show up here when it's ready.",
+		PullRequestGuideFailed:               "Couldn't write a guide to #{{.number}}: {{.error}}\n\nPress {{.key}} to try again.",
+		PullRequestGuideReady:                "The guide to #{{.number}} is ready",
+		NoGuideProvider:                      "Writing a guide needs Codex or Claude Code. Install one of them and log in to it.",
+		RegeneratePullRequestGuide:           "Rewrite guide",
+		RegeneratePullRequestGuideTitle:      "Rewrite guide",
+		RegeneratePullRequestGuidePrompt:     "Ask {{.provider}} to write this guide again? It uses your {{.provider}} account and can take a few minutes.",
+		PullRequestGuideWrittenBy:            "Written by {{.provider}}",
+		PullRequestGuideWrittenByModel:       "Written by {{.provider}} ({{.model}})",
+		PullRequestGuideStillBeingWritten:    "The guide is still being written",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

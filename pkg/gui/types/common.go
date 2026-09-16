@@ -425,6 +425,23 @@ type PullRequestListState struct {
 	// The review comments of the pull requests they have been loaded for, by
 	// pull request number
 	ReviewComments map[int]*PullRequestReviewComments
+	// The AI-written guides to the pull requests that one has been asked for,
+	// by pull request number
+	Guides map[int]*PullRequestGuideState
+}
+
+type PullRequestGuideState struct {
+	Head *models.PullRequestHead
+	// Nil while the guide is being written, or if writing it failed
+	Guide *git_commands.PullRequestGuide
+	Err   error
+	// The provider writing the guide, and since when
+	Provider  string
+	StartedAt time.Time
+}
+
+func (self *PullRequestGuideState) IsGenerating() bool {
+	return self.Guide == nil && self.Err == nil
 }
 
 type PullRequestReviewComments struct {

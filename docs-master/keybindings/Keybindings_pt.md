@@ -213,6 +213,13 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` <enter> `` | Ver commits |  |
 | `` / `` | Filtrar a visualização atual por texto |  |
 
+## Guide
+
+| Key | Action | Info |
+|-----|--------|-------------|
+| `` 0 `` | Focar visualização principal |  |
+| `` R `` | Rewrite guide |  |
+
 ## Input prompt
 
 | Key | Action | Info |
@@ -306,6 +313,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | Key | Action | Info |
 |-----|--------|-------------|
 | `` <enter> `` | View commits |  |
+| `` g `` | AI guide | Show an AI-written walkthrough of the pull request's changes: chapters that each explain a logical part of the change, with the hunks that make it up. Written by Codex or Claude Code (see git.pullRequestGuide in the config); the pull request's description and diff are sent to it. |
 | `` F `` | View files changed | Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab. |
 | `` <space> `` | Verificar | Check out the pull request's branch locally, creating it if needed (gh pr checkout). |
 | `` M `` | Merge pull request | Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass. |

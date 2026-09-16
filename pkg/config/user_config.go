@@ -268,6 +268,13 @@ type SpinnerConfig struct {
 	Rate int `yaml:"rate" jsonschema:"minimum=1"`
 }
 
+type PullRequestGuideConfig struct {
+	// The AI coding agent that writes the guides: 'codex' (the Codex CLI), 'claude' (Claude Code), or 'auto' to use Codex if it's installed and Claude Code otherwise.
+	Provider string `yaml:"provider" jsonschema:"enum=auto,enum=codex,enum=claude"`
+	// The model to write the guides with, in the form the provider's --model flag takes. Leave empty to use the provider's default model.
+	Model string `yaml:"model"`
+}
+
 type GitConfig struct {
 	// Array of diff renderers. Each entry has the following format:
 	// [dev] The following documentation is duplicated from the DiffRendererConfig struct below.
@@ -308,6 +315,8 @@ type GitConfig struct {
 	Merging MergingConfig `yaml:"merging"`
 	// list of branches that are considered 'main' branches, used when displaying commits
 	MainBranches []string `yaml:"mainBranches" jsonschema:"uniqueItems=true"`
+	// Config relating to the AI-written guides to pull requests, which walk you through a pull request's changes chapter by chapter
+	PullRequestGuide PullRequestGuideConfig `yaml:"pullRequestGuide"`
 	// Prefix to use when skipping hooks. E.g. if set to 'WIP', then pre-commit hooks will be skipped when the commit message starts with 'WIP'
 	SkipHookPrefix string `yaml:"skipHookPrefix"`
 	// If true, periodically fetch from remote
@@ -681,6 +690,7 @@ type KeybindingPullRequestsConfig struct {
 	Filter        Keybinding `yaml:"filter"`
 	ViewFiles     Keybinding `yaml:"viewFiles"`
 	Edit          Keybinding `yaml:"edit"`
+	Guide         Keybinding `yaml:"guide"`
 }
 
 type KeybindingCommitMessageConfig struct {
@@ -963,10 +973,13 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 				ShowGraph:      "always",
 				ShowWholeGraph: false,
 			},
-			LocalBranchSortOrder:         "date",
-			RemoteBranchSortOrder:        "date",
-			SkipHookPrefix:               "WIP",
-			MainBranches:                 []string{"master", "main"},
+			LocalBranchSortOrder:  "date",
+			RemoteBranchSortOrder: "date",
+			SkipHookPrefix:        "WIP",
+			MainBranches:          []string{"master", "main"},
+			PullRequestGuide: PullRequestGuideConfig{
+				Provider: "auto",
+			},
 			AutoFetch:                    true,
 			AutoRefresh:                  true,
 			AutoDetectExternalChanges:    true,
@@ -1200,6 +1213,7 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 				Filter:        Keybinding{"f"},
 				ViewFiles:     Keybinding{"F"},
 				Edit:          Keybinding{"e"},
+				Guide:         Keybinding{"g"},
 			},
 			CommitMessage: KeybindingCommitMessageConfig{
 				CommitMenu: Keybinding{"<ctrl+o>"},

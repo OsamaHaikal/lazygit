@@ -122,3 +122,16 @@ func (c *githubPullRequestCache) save(repoPath string, pullRequests []CachedPull
 
 	return nil
 }
+
+const pullRequestGuidesCacheDirName = "pull_request_guides"
+
+// PullRequestGuideCachePath returns the path of the file to keep an AI-written
+// guide to a pull request in, given the key that identifies it.
+func PullRequestGuideCachePath(key string) (string, error) {
+	path, err := stateFilePath(stateFileName)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(filepath.Dir(path), pullRequestGuidesCacheDirName, key+".json"), nil
+}

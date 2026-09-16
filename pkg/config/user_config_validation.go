@@ -202,6 +202,7 @@ var ValidCustomCommandContexts = []string{
 	"remotes",
 	"worktrees",
 	"pullRequests",
+	"pullRequestGuide",
 	"remoteBranches",
 	"tags",
 	"commits",

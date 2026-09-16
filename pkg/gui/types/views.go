@@ -3,18 +3,19 @@ package types
 import "github.com/jesseduffield/lazygit/pkg/gocui"
 
 type Views struct {
-	Status         *gocui.View
-	Submodules     *gocui.View
-	Files          *gocui.View
-	Branches       *gocui.View
-	Remotes        *gocui.View
-	Worktrees      *gocui.View
-	PullRequests   *gocui.View
-	Tags           *gocui.View
-	RemoteBranches *gocui.View
-	ReflogCommits  *gocui.View
-	Commits        *gocui.View
-	Stash          *gocui.View
+	Status           *gocui.View
+	Submodules       *gocui.View
+	Files            *gocui.View
+	Branches         *gocui.View
+	Remotes          *gocui.View
+	Worktrees        *gocui.View
+	PullRequests     *gocui.View
+	PullRequestGuide *gocui.View
+	Tags             *gocui.View
+	RemoteBranches   *gocui.View
+	ReflogCommits    *gocui.View
+	Commits          *gocui.View
+	Stash            *gocui.View
 
 	Main                   *gocui.View
 	Secondary              *gocui.View
