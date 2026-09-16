@@ -154,3 +154,19 @@ func TestRunAndProcessOutputLines(t *testing.T) {
 	assert.EqualError(t, err, "something went wrong\n")
 	assert.Equal(t, []string{"partial"}, lines)
 }
+
+func TestRunAndProcessOutputLinesCancel(t *testing.T) {
+	runner := getRunner()
+	builder := NewDummyCmdObjBuilder(runner)
+
+	cancel := make(chan struct{})
+	var lines []string
+	cmdObj := builder.New([]string{"sh", "-c", "echo started; sleep 30; echo finished"}).SetCancel(cancel)
+	err := runner.RunAndProcessOutputLines(cmdObj, func(line string) {
+		lines = append(lines, line)
+		close(cancel)
+	})
+
+	assert.ErrorIs(t, err, ErrCommandCancelled)
+	assert.Equal(t, []string{"started"}, lines)
+}

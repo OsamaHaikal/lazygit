@@ -199,6 +199,8 @@ func (self *cmdObjRunner) RunAndProcessLines(cmdObj *CmdObj, onLine func(line st
 	return nil
 }
 
+var ErrCommandCancelled = errors.New("command cancelled")
+
 // RunAndProcessOutputLines calls onLine with each line of the command's stdout
 // as soon as it's printed. Unlike RunAndProcessLines, it passes on lines of
 // any length, and it fails if the command does, with its stderr as the error.
@@ -220,6 +222,20 @@ func (self *cmdObjRunner) RunAndProcessOutputLines(cmdObj *CmdObj, onLine func(l
 		return err
 	}
 
+	done := make(chan struct{})
+	defer close(done)
+	cancelled := make(chan struct{})
+	if cancel := cmdObj.GetCancel(); cancel != nil {
+		go func() {
+			select {
+			case <-cancel:
+				close(cancelled)
+				_ = cmd.Process.Kill()
+			case <-done:
+			}
+		}()
+	}
+
 	reader := bufio.NewReader(stdoutPipe)
 	for {
 		line, readErr := reader.ReadString('\n')
@@ -233,6 +249,12 @@ func (self *cmdObjRunner) RunAndProcessOutputLines(cmdObj *CmdObj, onLine func(l
 
 	err = cmd.Wait()
 	self.log.Infof("%s (%s)", cmdObj.ToString(), time.Since(t))
+
+	select {
+	case <-cancelled:
+		return ErrCommandCancelled
+	default:
+	}
 
 	_, err = sanitisedCommandOutput(errBuffer.Bytes(), err)
 	return err

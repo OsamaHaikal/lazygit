@@ -37,6 +37,9 @@ type CmdObj struct {
 
 	// can be set so that we don't run certain commands simultaneously
 	mutex *deadlock.Mutex
+
+	// see SetCancel()
+	cancel <-chan struct{}
 }
 
 type CredentialStrategy int
@@ -212,6 +215,17 @@ func (self *CmdObj) RunWithOutputs() (string, string, error) {
 // returns true for the boolean value, we kill the process and return.
 func (self *CmdObj) RunAndProcessLines(onLine func(line string) (bool, error)) error {
 	return self.runner.RunAndProcessLines(self, onLine)
+}
+
+// SetCancel makes RunAndProcessOutputLines kill the command, and return
+// ErrCommandCancelled, when the channel is closed before the command is done.
+func (self *CmdObj) SetCancel(cancel <-chan struct{}) *CmdObj {
+	self.cancel = cancel
+	return self
+}
+
+func (self *CmdObj) GetCancel() <-chan struct{} {
+	return self.cancel
 }
 
 func (self *CmdObj) RunAndProcessOutputLines(onLine func(line string)) error {
