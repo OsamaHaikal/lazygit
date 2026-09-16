@@ -458,6 +458,8 @@ type TranslationSet struct {
 	PullRequestGuideWrittenBy             string
 	PullRequestGuideWrittenByModel        string
 	PullRequestGuideStillBeingWritten     string
+	ViewGuideChapterFiles                 string
+	ViewGuideChapterFilesTooltip          string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1726,6 +1728,8 @@ func EnglishTranslationSet() *TranslationSet {
 		PullRequestGuideWrittenBy:            "Written by {{.provider}}",
 		PullRequestGuideWrittenByModel:       "Written by {{.provider}} ({{.model}})",
 		PullRequestGuideStillBeingWritten:    "The guide is still being written",
+		ViewGuideChapterFiles:                "View chapter files",
+		ViewGuideChapterFilesTooltip:         "Show the files of this chapter, to go through their diffs and comment on their lines.",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

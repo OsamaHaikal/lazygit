@@ -7,6 +7,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
@@ -36,6 +37,21 @@ func NewPullRequestGuideController(c *ControllerCommon) *PullRequestGuideControl
 
 func (self *PullRequestGuideController) GetKeybindings(opts types.KeybindingsOpts) []*types.Binding {
 	return []*types.Binding{
+		{
+			Keys:              opts.GetKeys(opts.Config.Universal.GoInto),
+			Handler:           self.withItem(self.viewChapterFiles),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.ViewGuideChapterFiles,
+			Tooltip:           self.c.Tr.ViewGuideChapterFilesTooltip,
+			DisplayOnScreen:   true,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.ViewFiles),
+			Handler:           self.viewAllFiles,
+			GetDisabledReason: self.notWhileWriting,
+			Description:       self.c.Tr.ViewPullRequestFiles,
+			Tooltip:           self.c.Tr.ViewPullRequestFilesTooltip,
+		},
 		{
 			Keys:              opts.GetKeys(opts.Config.Universal.Refresh),
 			Handler:           self.rewrite,
@@ -92,6 +108,38 @@ func (self *PullRequestGuideController) mainViewContent() string {
 	}
 
 	return presentation.FormatPullRequestGuideChapter(state.Guide, chapter, writtenBy)
+}
+
+func (self *PullRequestGuideController) GetOnDoubleClick() func() error {
+	return self.withItemGraceful(self.viewChapterFiles)
+}
+
+// viewChapterFiles shows the files that the chapter's hunks are in, so that
+// their diffs can be gone through like a commit's.
+func (self *PullRequestGuideController) viewChapterFiles(chapter *git_commands.GuideChapter) error {
+	state := self.context().GetGuideState()
+	paths := lo.Uniq(lo.FlatMap(state.Guide.Units(*chapter), func(unit git_commands.GuideReviewUnit, _ int) []string {
+		// A renamed file only shows up as a rename if both of its paths are
+		// included
+		return lo.Compact([]string{unit.OldPath, unit.Path})
+	}))
+
+	self.c.Helpers().CommitFiles.ViewCommitFiles(helpers.ViewCommitFilesOpts{
+		Ref:      state.Head,
+		Context:  self.context(),
+		Paths:    paths,
+		TitleRef: chapter.Title,
+	})
+	return nil
+}
+
+func (self *PullRequestGuideController) viewAllFiles() error {
+	state := self.context().GetGuideState()
+	self.c.Helpers().CommitFiles.ViewCommitFiles(helpers.ViewCommitFilesOpts{
+		Ref:     state.Head,
+		Context: self.context(),
+	})
+	return nil
 }
 
 func (self *PullRequestGuideController) rewrite() error {
