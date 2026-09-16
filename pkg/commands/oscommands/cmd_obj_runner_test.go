@@ -6,6 +6,7 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func getRunner() *cmdObjRunner {
@@ -134,4 +135,22 @@ func TestProcessOutput(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunAndProcessOutputLines(t *testing.T) {
+	longLine := strings.Repeat("x", 200_000)
+	runner := getRunner()
+	builder := NewDummyCmdObjBuilder(runner)
+
+	var lines []string
+	cmdObj := builder.New([]string{"sh", "-c", "echo first; echo " + longLine + "; printf last"})
+	err := runner.RunAndProcessOutputLines(cmdObj, func(line string) { lines = append(lines, line) })
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"first", longLine, "last"}, lines)
+
+	lines = nil
+	cmdObj = builder.New([]string{"sh", "-c", "echo partial; echo something went wrong >&2; exit 1"})
+	err = runner.RunAndProcessOutputLines(cmdObj, func(line string) { lines = append(lines, line) })
+	assert.EqualError(t, err, "something went wrong\n")
+	assert.Equal(t, []string{"partial"}, lines)
 }

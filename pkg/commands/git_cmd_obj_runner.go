@@ -95,6 +95,10 @@ func (self *gitCmdObjRunner) retryOnLockError(run func() (string, error)) (strin
 	return output, err
 }
 
+func (self *gitCmdObjRunner) RunAndProcessOutputLines(cmdObj *oscommands.CmdObj, onLine func(line string)) error {
+	return self.innerRunner.RunAndProcessOutputLines(cmdObj, onLine)
+}
+
 // Retry logic not implemented here, but these commands typically don't need to obtain a lock.
 func (self *gitCmdObjRunner) RunAndProcessLines(cmdObj *oscommands.CmdObj, onLine func(line string) (bool, error)) error {
 	return self.innerRunner.RunAndProcessLines(cmdObj, onLine)

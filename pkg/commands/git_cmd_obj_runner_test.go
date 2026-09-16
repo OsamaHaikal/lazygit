@@ -46,6 +46,10 @@ func (self *scriptedRunner) RunAndProcessLines(*oscommands.CmdObj, func(string) 
 	panic("not implemented")
 }
 
+func (self *scriptedRunner) RunAndProcessOutputLines(*oscommands.CmdObj, func(string)) error {
+	panic("not implemented")
+}
+
 func newTestRunner(inner *scriptedRunner) *gitCmdObjRunner {
 	return &gitCmdObjRunner{
 		log:         utils.NewDummyLog(),

@@ -214,6 +214,10 @@ func (self *CmdObj) RunAndProcessLines(onLine func(line string) (bool, error)) e
 	return self.runner.RunAndProcessLines(self, onLine)
 }
 
+func (self *CmdObj) RunAndProcessOutputLines(onLine func(line string)) error {
+	return self.runner.RunAndProcessOutputLines(self, onLine)
+}
+
 func (self *CmdObj) PromptOnCredentialRequest(task gocui.Task) *CmdObj {
 	self.credentialStrategy = PROMPT
 	self.usePty = true

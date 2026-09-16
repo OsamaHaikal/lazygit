@@ -105,6 +105,17 @@ func (self *FakeCmdObjRunner) RunAndProcessLines(cmdObj *CmdObj, onLine func(lin
 	return nil
 }
 
+func (self *FakeCmdObjRunner) RunAndProcessOutputLines(cmdObj *CmdObj, onLine func(line string)) error {
+	output, err := self.RunWithOutput(cmdObj)
+	for _, line := range strings.Split(strings.TrimSuffix(output, "\n"), "\n") {
+		if line != "" {
+			onLine(line)
+		}
+	}
+
+	return err
+}
+
 func (self *FakeCmdObjRunner) ExpectFunc(description string, fn func(cmdObj *CmdObj) bool, output string, err error) *FakeCmdObjRunner {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()

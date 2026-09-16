@@ -20,6 +20,7 @@ type ICmdObjRunner interface {
 	RunWithOutput(cmdObj *CmdObj) (string, error)
 	RunWithOutputs(cmdObj *CmdObj) (string, string, error)
 	RunAndProcessLines(cmdObj *CmdObj, onLine func(line string) (bool, error)) error
+	RunAndProcessOutputLines(cmdObj *CmdObj, onLine func(line string)) error
 }
 
 type cmdObjRunner struct {
@@ -196,6 +197,45 @@ func (self *cmdObjRunner) RunAndProcessLines(cmdObj *CmdObj, onLine func(line st
 	self.log.Infof("%s (%s)", cmdObj.ToString(), time.Since(t))
 
 	return nil
+}
+
+// RunAndProcessOutputLines calls onLine with each line of the command's stdout
+// as soon as it's printed. Unlike RunAndProcessLines, it passes on lines of
+// any length, and it fails if the command does, with its stderr as the error.
+func (self *cmdObjRunner) RunAndProcessOutputLines(cmdObj *CmdObj, onLine func(line string)) error {
+	if cmdObj.ShouldLog() {
+		self.logCmdObj(cmdObj)
+	}
+	t := time.Now()
+
+	cmd := cmdObj.GetCmd()
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	var errBuffer bytes.Buffer
+	cmd.Stderr = &errBuffer
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(stdoutPipe)
+	for {
+		line, readErr := reader.ReadString('\n')
+		if line != "" {
+			onLine(strings.TrimRight(line, "\r\n"))
+		}
+		if readErr != nil {
+			break
+		}
+	}
+
+	err = cmd.Wait()
+	self.log.Infof("%s (%s)", cmdObj.ToString(), time.Since(t))
+
+	_, err = sanitisedCommandOutput(errBuffer.Bytes(), err)
+	return err
 }
 
 func (self *cmdObjRunner) logCmdObj(cmdObj *CmdObj) {
