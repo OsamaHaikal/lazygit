@@ -33,6 +33,7 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 		{viewPtr: &gui.Views.Files, name: "files"},
 		{viewPtr: &gui.Views.Tags, name: "tags"},
 		{viewPtr: &gui.Views.Remotes, name: "remotes"},
+		{viewPtr: &gui.Views.PullRequests, name: "pullRequests"},
 		{viewPtr: &gui.Views.Branches, name: "localBranches"},
 		{viewPtr: &gui.Views.RemoteBranches, name: "remoteBranches"},
 		{viewPtr: &gui.Views.ReflogCommits, name: "reflogCommits"},
@@ -217,6 +218,7 @@ func (gui *Gui) configureViewProperties() {
 	gui.Views.Branches.Title = gui.c.Tr.BranchesTitle
 	gui.Views.Remotes.Title = gui.c.Tr.RemotesTitle
 	gui.Views.Worktrees.Title = gui.c.Tr.WorktreesTitle
+	gui.Views.PullRequests.Title = gui.c.Tr.PullRequestsTitle
 	gui.Views.Submodules.Title = gui.c.Tr.SubmodulesTitle
 	gui.Views.Tags.Title = gui.c.Tr.TagsTitle
 	gui.Views.Files.Title = gui.c.Tr.FilesTitle

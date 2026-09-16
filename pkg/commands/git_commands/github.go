@@ -415,3 +415,7 @@ func graphQLEndpoint(host string) string {
 	}
 	return "https://" + host + "/api/graphql"
 }
+
+func (self *GitHubCommands) IsGhInstalled() bool {
+	return ghExecutable() != ""
+}

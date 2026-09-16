@@ -54,6 +54,10 @@ func (self *Views) Worktrees() *ViewDriver {
 	return self.regularView("worktrees")
 }
 
+func (self *Views) PullRequests() *ViewDriver {
+	return self.regularView("pullRequests")
+}
+
 func (self *Views) Status() *ViewDriver {
 	return self.regularView("status")
 }

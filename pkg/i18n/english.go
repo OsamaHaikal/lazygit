@@ -375,6 +375,14 @@ type TranslationSet struct {
 	PullRequestChecksFailing              string
 	PullRequestChecksError                string
 	PullRequestChecksExpected             string
+	PullRequestsTitle                     string
+	PullRequestApproved                   string
+	PullRequestChangesRequested           string
+	NoPullRequests                        string
+	RefreshPullRequests                   string
+	LoadPullRequestsError                 string
+	NoGithubRepoForPullRequests           string
+	GhNeededForPullRequests               string
 	ErrorOccurred                         string
 	ConflictLabel                         string
 	PendingRebaseTodosSectionHeader       string
@@ -1543,6 +1551,14 @@ func EnglishTranslationSet() *TranslationSet {
 		PullRequestChecksFailing:             "Failing",
 		PullRequestChecksError:               "Error",
 		PullRequestChecksExpected:            "Expected",
+		PullRequestsTitle:                    "Pull requests",
+		PullRequestApproved:                  "Approved",
+		PullRequestChangesRequested:          "Changes requested",
+		NoPullRequests:                       "No pull requests",
+		RefreshPullRequests:                  "Refresh pull requests",
+		LoadPullRequestsError:                "Couldn't load pull requests: {{.error}}",
+		NoGithubRepoForPullRequests:          "Couldn't tell which GitHub repository to list pull requests for. This needs a remote pointing at GitHub; if there are several, pick the one to use with 'gh repo set-default'.",
+		GhNeededForPullRequests:              "Managing pull requests needs the GitHub CLI. Install it from https://cli.github.com and log in with 'gh auth login'.",
 		ErrorOccurred:                        "An error occurred! Please create an issue at",
 		ConflictLabel:                        "CONFLICT",
 		PendingRebaseTodosSectionHeader:      "Pending rebase todos",

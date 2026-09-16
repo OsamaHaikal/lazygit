@@ -116,7 +116,7 @@ type GuiConfig struct {
 	// The side panels, in the order they appear from top to bottom.
 	// Each entry is a list of one or more names that share a single panel as tabs (cycle through them with the next-tab/previous-tab keys).
 	// Omit a name to hide it; give a name its own one-element list to promote a tab to a top-level panel.
-	// Valid names are: 'status', 'files', 'worktrees', 'submodules', 'branches', 'remotes', 'tags', 'commits', 'reflog', 'stash'. 'files', 'branches', and 'commits' must always be included; they can't be hidden.
+	// Valid names are: 'status', 'files', 'worktrees', 'submodules', 'branches', 'pullRequests', 'remotes', 'tags', 'commits', 'reflog', 'stash'. 'files', 'branches', and 'commits' must always be included; they can't be hidden.
 	SidePanels []SidePanel `yaml:"sidePanels"`
 	// Sometimes the main window is split in two (e.g. when the selected file has both staged and unstaged changes). This setting controls how the two sections are split.
 	// Options are:
@@ -870,7 +870,7 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 			SidePanels: []SidePanel{
 				{"status"},
 				{"files", "worktrees", "submodules"},
-				{"branches", "remotes", "tags"},
+				{"branches", "pullRequests", "remotes", "tags"},
 				{"commits", "reflog"},
 				{"stash"},
 			},

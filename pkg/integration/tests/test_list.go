@@ -20,6 +20,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/integration/tests/interactive_rebase"
 	"github.com/jesseduffield/lazygit/pkg/integration/tests/misc"
 	"github.com/jesseduffield/lazygit/pkg/integration/tests/patch_building"
+	"github.com/jesseduffield/lazygit/pkg/integration/tests/pull_request"
 	"github.com/jesseduffield/lazygit/pkg/integration/tests/reflog"
 	"github.com/jesseduffield/lazygit/pkg/integration/tests/remote"
 	"github.com/jesseduffield/lazygit/pkg/integration/tests/shell_commands"
@@ -409,6 +410,7 @@ var tests = []*components.IntegrationTest{
 	patch_building.StartNewPatch,
 	patch_building.ToggleDirectory,
 	patch_building.ToggleRange,
+	pull_request.ListPullRequests,
 	reflog.Checkout,
 	reflog.CherryPick,
 	reflog.DoNotShowBranchMarkersInReflogSubcommits,

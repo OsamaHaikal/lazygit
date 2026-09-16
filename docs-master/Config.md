@@ -121,12 +121,12 @@ gui:
   # Omit a name to hide it; give a name its own one-element list to promote a tab
   # to a top-level panel.
   # Valid names are: 'status', 'files', 'worktrees', 'submodules', 'branches',
-  # 'remotes', 'tags', 'commits', 'reflog', 'stash'. 'files', 'branches', and
-  # 'commits' must always be included; they can't be hidden.
+  # 'pullRequests', 'remotes', 'tags', 'commits', 'reflog', 'stash'. 'files',
+  # 'branches', and 'commits' must always be included; they can't be hidden.
   sidePanels:
     - [status]
     - [files, worktrees, submodules]
-    - [branches, remotes, tags]
+    - [branches, pullRequests, remotes, tags]
     - [commits, reflog]
     - [stash]
 

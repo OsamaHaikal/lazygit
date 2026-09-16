@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -181,4 +182,29 @@ func parsePullRequestListResponse(respBytes []byte) ([]*models.GithubPullRequest
 			UpdatedAt:           node.UpdatedAt,
 		}, true
 	}), nil
+}
+
+// ViewPullRequestCmdObj returns a command that prints a pull request's
+// description, status, and comments the way gh shows them in a terminal of the
+// given width.
+func (self *GitHubCommands) ViewPullRequestCmdObj(repo hosting_service.ServiceInfo, number int, width int) (*oscommands.CmdObj, error) {
+	cmdObj, err := self.ghCmdObj("pr", "view", strconv.Itoa(number), "--repo", ghRepoArg(repo), "--comments")
+	if err != nil {
+		return nil, err
+	}
+
+	return withGhTerminalOutput(cmdObj, width), nil
+}
+
+// withGhTerminalOutput makes gh format its output (colors, wrapping, tables)
+// as if it were writing to a terminal of the given width, even though we
+// capture it to show it in a view, and without piping it through a pager.
+func withGhTerminalOutput(cmdObj *oscommands.CmdObj, width int) *oscommands.CmdObj {
+	return cmdObj.AddEnvVars("GH_FORCE_TTY="+strconv.Itoa(width), "GH_PAGER=cat")
+}
+
+// ghRepoArg returns the value for gh's --repo flag, which needs the host
+// spelled out for GitHub Enterprise repos.
+func ghRepoArg(repo hosting_service.ServiceInfo) string {
+	return repo.WebDomain + "/" + repo.RepoName
 }

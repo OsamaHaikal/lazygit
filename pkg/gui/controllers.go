@@ -126,9 +126,10 @@ func (gui *Gui) resetHelpersAndControllers() {
 			modeHelper,
 			appStatusHelper,
 		),
-		Search:     searchHelper,
-		Worktree:   worktreeHelper,
-		SubCommits: helpers.NewSubCommitsHelper(helperCommon, refreshHelper),
+		Search:       searchHelper,
+		Worktree:     worktreeHelper,
+		SubCommits:   helpers.NewSubCommitsHelper(helperCommon, refreshHelper),
+		PullRequests: helpers.NewPullRequestsHelper(helperCommon, searchHelper),
 	}
 
 	gui.CustomCommandsClient = custom_commands.NewClient(
@@ -171,6 +172,7 @@ func (gui *Gui) resetHelpersAndControllers() {
 		func(branches []*models.RemoteBranch) { gui.State.Model.RemoteBranches = branches },
 	)
 	worktreesController := controllers.NewWorktreesController(common)
+	pullRequestsController := controllers.NewPullRequestsController(common)
 	undoController := controllers.NewUndoController(common)
 	globalController := controllers.NewGlobalController(common)
 	contextLinesController := controllers.NewContextLinesController(common)
@@ -215,6 +217,7 @@ func (gui *Gui) resetHelpersAndControllers() {
 		gui.State.Contexts.Status,
 		gui.State.Contexts.Remotes,
 		gui.State.Contexts.Worktrees,
+		gui.State.Contexts.PullRequests,
 		gui.State.Contexts.Tags,
 		gui.State.Contexts.Branches,
 		gui.State.Contexts.RemoteBranches,
@@ -354,6 +357,10 @@ func (gui *Gui) resetHelpersAndControllers() {
 
 	controllers.AttachControllers(gui.State.Contexts.Worktrees,
 		worktreesController,
+	)
+
+	controllers.AttachControllers(gui.State.Contexts.PullRequests,
+		pullRequestsController,
 	)
 
 	controllers.AttachControllers(gui.State.Contexts.Stash,

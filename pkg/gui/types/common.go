@@ -1,8 +1,11 @@
 package types
 
 import (
+	"time"
+
 	"github.com/jesseduffield/lazygit/pkg/commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
+	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/common"
@@ -367,6 +370,12 @@ type Model struct {
 	PullRequests    []*models.GithubPullRequest
 	PullRequestsMap map[string]*models.GithubPullRequest
 
+	// The pull requests listed in the pull requests panel. Unlike PullRequests
+	// above, these aren't tied to local branches, and they are only loaded once
+	// the panel is shown.
+	PullRequestList      []*models.GithubPullRequest
+	PullRequestListState PullRequestListState
+
 	// FilteredReflogCommits are the ones that appear in the reflog panel.
 	// When in filtering mode we only include the ones that match the given path
 	FilteredReflogCommits []*models.Commit
@@ -391,6 +400,19 @@ type Model struct {
 	Authors map[string]*models.Author
 
 	HashPool *utils.StringPool
+}
+
+type PullRequestListState struct {
+	Filter git_commands.PullRequestFilter
+	// The GitHub repo that the list was loaded from; nil until a load succeeds.
+	Repo *hosting_service.ServiceInfo
+	// Why the last load failed, if it did
+	Err      error
+	Loading  bool
+	LoadedAt time.Time
+	// Incremented whenever a load starts, so that a load can tell whether a
+	// newer one has been started since, and drop its result if so.
+	LoadID int
 }
 
 type Mutexes struct {

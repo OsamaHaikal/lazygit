@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 type GithubPullRequest struct {
 	HeadRefName         string                `json:"headRefName"`
@@ -23,6 +26,14 @@ type GithubPullRequest struct {
 	ChangedFiles   int
 	CommentCount   int
 	UpdatedAt      time.Time
+}
+
+func (pr *GithubPullRequest) ID() string {
+	return strconv.Itoa(pr.Number)
+}
+
+func (pr *GithubPullRequest) Description() string {
+	return "#" + strconv.Itoa(pr.Number) + " " + pr.Title
 }
 
 func (pr *GithubPullRequest) UserName() string {

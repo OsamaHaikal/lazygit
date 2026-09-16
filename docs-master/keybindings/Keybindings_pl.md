@@ -310,6 +310,13 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` <enter> `` | Potwierdź |  |
 | `` <esc> `` | Zamknij |  |
 
+## Pull requests
+
+| Key | Action | Info |
+|-----|--------|-------------|
+| `` R `` | Refresh pull requests |  |
+| `` / `` | Filtruj bieżący widok po tekście |  |
+
 ## Schowek
 
 | Key | Action | Info |

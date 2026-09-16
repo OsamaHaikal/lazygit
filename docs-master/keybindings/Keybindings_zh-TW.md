@@ -52,6 +52,13 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` ] `` | 下一個索引標籤 |  |
 | `` [ `` | 上一個索引標籤 |  |
 
+## Pull requests
+
+| Key | Action | Info |
+|-----|--------|-------------|
+| `` R `` | Refresh pull requests |  |
+| `` / `` | 搜尋 |  |
+
 ## 主面板 (補丁生成)
 
 | Key | Action | Info |
