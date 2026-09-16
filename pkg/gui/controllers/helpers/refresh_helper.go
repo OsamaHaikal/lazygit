@@ -1702,17 +1702,11 @@ func (self *RefreshHelper) refreshGithubPullRequests(branches []*models.Branch, 
 		})
 	}
 
-	githubRemotes := getAuthenticatedGithubRemotes(self.getGithubRemotes(remotes, env), env.git.GitHub.GetAuthToken)
-	if len(githubRemotes) == 0 {
-		clearPullRequests()
-		return
-	}
-
-	baseInfo := getGithubBaseRemote(githubRemotes, env.git.GitHub.ConfiguredBaseRemoteName())
+	baseInfo, githubRemotes := findGithubBaseRemote(env.git, remotes)
 	if baseInfo == nil {
 		clearPullRequests()
 
-		if !self.githubBaseRemotePromptDismissed[env.git.RepoPaths.RepoPath()] {
+		if len(githubRemotes) > 0 && !self.githubBaseRemotePromptDismissed[env.git.RepoPaths.RepoPath()] {
 			self.promptForBaseGithubRepo(githubRemotes)
 		}
 		return
@@ -1727,12 +1721,25 @@ type githubRemoteInfo struct {
 	authToken   string
 }
 
-func (self *RefreshHelper) getGithubRemotes(remotes []*models.Remote, env refreshEnv) []githubRemoteInfo {
+// findGithubBaseRemote returns the authenticated GitHub remote that pull
+// requests are made against, or nil if there is none or the choice is
+// ambiguous. It also returns all the authenticated GitHub remotes, which are
+// the candidates to ask the user to pick from in the ambiguous case.
+func findGithubBaseRemote(git *commands.GitCommand, remotes []*models.Remote) (*githubRemoteInfo, []githubRemoteInfo) {
+	githubRemotes := getAuthenticatedGithubRemotes(getGithubRemotes(git, remotes), git.GitHub.GetAuthToken)
+	if len(githubRemotes) == 0 {
+		return nil, nil
+	}
+
+	return getGithubBaseRemote(githubRemotes, git.GitHub.ConfiguredBaseRemoteName()), githubRemotes
+}
+
+func getGithubRemotes(git *commands.GitCommand, remotes []*models.Remote) []githubRemoteInfo {
 	return lo.FilterMap(remotes, func(remote *models.Remote, _ int) (githubRemoteInfo, bool) {
 		if len(remote.Urls) == 0 {
 			return githubRemoteInfo{}, false
 		}
-		serviceInfo, err := env.git.HostingService.GetServiceInfo(remote.Urls[0])
+		serviceInfo, err := git.HostingService.GetServiceInfo(remote.Urls[0])
 		if err != nil || serviceInfo.Provider != "github" {
 			return githubRemoteInfo{}, false
 		}
