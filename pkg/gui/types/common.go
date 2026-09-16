@@ -236,8 +236,10 @@ type CreatePopupPanelOpts struct {
 	FindSuggestionsFunc func(string) []*Suggestion
 	Mask                bool
 	AllowEditSuggestion bool
-	AllowEmptyInput     bool
-	PreserveWhitespace  bool
+	// See PromptOpts
+	SuggestionsCompleteInput bool
+	AllowEmptyInput          bool
+	PreserveWhitespace       bool
 }
 
 type ConfirmOpts struct {
@@ -256,8 +258,13 @@ type PromptOpts struct {
 	FindSuggestionsFunc func(string) []*Suggestion
 	HandleConfirm       func(string) error
 	AllowEditSuggestion bool
-	AllowEmptyInput     bool
-	PreserveWhitespace  bool
+	// Whether choosing a suggestion replaces what has been typed with it and
+	// lets you continue typing, rather than submitting the suggestion. Useful
+	// for suggestions that complete part of a longer input, e.g. a mention in
+	// a comment.
+	SuggestionsCompleteInput bool
+	AllowEmptyInput          bool
+	PreserveWhitespace       bool
 	// CAPTURE THIS
 	HandleClose            func() error
 	HandleDeleteSuggestion func(int) error

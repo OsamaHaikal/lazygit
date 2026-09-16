@@ -271,6 +271,9 @@ func (self *ConfirmationHelper) setPromptKeyBindings(cancel goContext.CancelFunc
 		opts.AllowEmptyInput,
 		opts.PreserveWhitespace,
 	)
+	if opts.SuggestionsCompleteInput {
+		onSuggestionConfirm = self.completePromptInputWithSelectedSuggestion
+	}
 
 	onClose := self.wrappedConfirmationFunction(cancel, opts.HandleClose)
 
@@ -303,6 +306,23 @@ func (self *ConfirmationHelper) clearPromptViewKeyBindings() {
 	self.c.Contexts().Suggestions.State.OnConfirm = noop
 	self.c.Contexts().Suggestions.State.OnClose = noop
 	self.c.Contexts().Suggestions.State.OnDeleteSuggestion = noop
+}
+
+func (self *ConfirmationHelper) completePromptInputWithSelectedSuggestion() error {
+	value := self.getSelectedSuggestionValue()
+	if value == "" {
+		return nil
+	}
+
+	promptView := self.c.Views().Prompt
+	promptView.TextArea.Clear()
+	promptView.TextArea.TypeString(value)
+	promptView.RenderTextArea()
+	self.c.Contexts().Suggestions.RefreshSuggestions()
+
+	self.c.Views().Suggestions.Subtitle = ""
+	self.c.Context().Replace(self.c.Contexts().Prompt)
+	return nil
 }
 
 func (self *ConfirmationHelper) getSelectedSuggestionValue() string {
