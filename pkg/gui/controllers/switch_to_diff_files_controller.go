@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"path/filepath"
-
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
@@ -67,8 +66,6 @@ func (self *SwitchToDiffFilesController) GetOnDoubleClick() func() error {
 func (self *SwitchToDiffFilesController) enter() error {
 	ref := self.context.GetSelectedRef()
 	refsRange := self.context.GetSelectedRefRangeForDiffFiles()
-	commitFilesContext := self.c.Contexts().CommitFiles
-
 	canRebase := self.context.CanRebase()
 	if canRebase {
 		if self.c.Modes().Diffing.Active() {
@@ -80,28 +77,11 @@ func (self *SwitchToDiffFilesController) enter() error {
 		}
 	}
 
-	commitFilesContext.ClearFilter()
-	commitFilesContext.ReInit(ref, refsRange)
-	commitFilesContext.SetSelection(0)
-	commitFilesContext.SetCanRebase(canRebase)
-	commitFilesContext.SetParentContext(self.context)
-	commitFilesContext.SetWindowName(self.context.GetWindowName())
-	commitFilesContext.GetView().TitlePrefix = self.context.GetView().TitlePrefix
-
-	self.c.Refresh(types.RefreshOptions{
-		Scope: []types.RefreshableView{types.COMMIT_FILES},
-		Then: func() error {
-			if filterPath := self.c.Modes().Filtering.GetPath(); filterPath != "" {
-				path, err := filepath.Rel(self.c.Git().RepoPaths.RepoPath(), filterPath)
-				if err != nil {
-					path = filterPath
-				}
-				commitFilesContext.CommitFileTreeViewModel.SelectPath(
-					filepath.ToSlash(path), self.c.UserConfig().Gui.ShowRootItemInFileTree)
-			}
-			self.c.Context().Push(commitFilesContext, types.OnFocusOpts{})
-			return nil
-		},
+	self.c.Helpers().CommitFiles.ViewCommitFiles(helpers.ViewCommitFilesOpts{
+		Ref:       ref,
+		RefRange:  refsRange,
+		CanRebase: canRebase,
+		Context:   self.context,
 	})
 	return nil
 }
