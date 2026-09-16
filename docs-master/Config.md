@@ -824,6 +824,12 @@ keybinding:
     init: i
     update: u
     bulkMenu: b
+  pullRequests:
+    merge: M
+    review: a
+    comment: c
+    toggleDraft: r
+    closeOrReopen: d
   commitMessage:
     commitMenu: <ctrl+o>
 ```

@@ -208,3 +208,71 @@ func withGhTerminalOutput(cmdObj *oscommands.CmdObj, width int) *oscommands.CmdO
 func ghRepoArg(repo hosting_service.ServiceInfo) string {
 	return repo.WebDomain + "/" + repo.RepoName
 }
+
+type PullRequestMergeMethod string
+
+const (
+	PullRequestMergeMethodMerge  PullRequestMergeMethod = "--merge"
+	PullRequestMergeMethodSquash PullRequestMergeMethod = "--squash"
+	PullRequestMergeMethodRebase PullRequestMergeMethod = "--rebase"
+)
+
+type PullRequestReviewEvent string
+
+const (
+	PullRequestReviewApprove        PullRequestReviewEvent = "--approve"
+	PullRequestReviewRequestChanges PullRequestReviewEvent = "--request-changes"
+	PullRequestReviewComment        PullRequestReviewEvent = "--comment"
+)
+
+func (self *GitHubCommands) CheckoutPullRequest(repo hosting_service.ServiceInfo, number int) error {
+	return self.runPullRequestCommand(repo, number, "checkout")
+}
+
+// MergePullRequest merges the pull request right away, or, if auto is true,
+// enables auto-merge so that GitHub merges it once its requirements are met.
+func (self *GitHubCommands) MergePullRequest(repo hosting_service.ServiceInfo, number int, method PullRequestMergeMethod, auto bool) error {
+	args := []string{string(method)}
+	if auto {
+		args = append(args, "--auto")
+	}
+	return self.runPullRequestCommand(repo, number, "merge", args...)
+}
+
+func (self *GitHubCommands) ClosePullRequest(repo hosting_service.ServiceInfo, number int) error {
+	return self.runPullRequestCommand(repo, number, "close")
+}
+
+func (self *GitHubCommands) ReopenPullRequest(repo hosting_service.ServiceInfo, number int) error {
+	return self.runPullRequestCommand(repo, number, "reopen")
+}
+
+func (self *GitHubCommands) MarkPullRequestReady(repo hosting_service.ServiceInfo, number int) error {
+	return self.runPullRequestCommand(repo, number, "ready")
+}
+
+func (self *GitHubCommands) ConvertPullRequestToDraft(repo hosting_service.ServiceInfo, number int) error {
+	return self.runPullRequestCommand(repo, number, "ready", "--undo")
+}
+
+func (self *GitHubCommands) CommentOnPullRequest(repo hosting_service.ServiceInfo, number int, body string) error {
+	return self.runPullRequestCommand(repo, number, "comment", "--body", body)
+}
+
+// ReviewPullRequest submits a review. The body may be empty when approving.
+func (self *GitHubCommands) ReviewPullRequest(repo hosting_service.ServiceInfo, number int, event PullRequestReviewEvent, body string) error {
+	args := []string{string(event)}
+	if body != "" {
+		args = append(args, "--body", body)
+	}
+	return self.runPullRequestCommand(repo, number, "review", args...)
+}
+
+func (self *GitHubCommands) runPullRequestCommand(repo hosting_service.ServiceInfo, number int, subcommand string, args ...string) error {
+	cmdObj, err := self.ghCmdObj(append([]string{"pr", subcommand, strconv.Itoa(number), "--repo", ghRepoArg(repo)}, args...)...)
+	if err != nil {
+		return err
+	}
+
+	return cmdObj.Run()
+}

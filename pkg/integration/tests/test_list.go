@@ -411,6 +411,7 @@ var tests = []*components.IntegrationTest{
 	patch_building.ToggleDirectory,
 	patch_building.ToggleRange,
 	pull_request.ListPullRequests,
+	pull_request.PullRequestActions,
 	reflog.Checkout,
 	reflog.CherryPick,
 	reflog.DoNotShowBranchMarkersInReflogSubcommits,

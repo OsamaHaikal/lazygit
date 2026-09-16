@@ -456,6 +456,7 @@ type KeybindingConfig struct {
 	CommitFiles    KeybindingCommitFilesConfig    `yaml:"commitFiles"`
 	Main           KeybindingMainConfig           `yaml:"main"`
 	Submodules     KeybindingSubmodulesConfig     `yaml:"submodules"`
+	PullRequests   KeybindingPullRequestsConfig   `yaml:"pullRequests"`
 	CommitMessage  KeybindingCommitMessageConfig  `yaml:"commitMessage"`
 }
 
@@ -669,6 +670,14 @@ type KeybindingSubmodulesConfig struct {
 	Init     Keybinding `yaml:"init"`
 	Update   Keybinding `yaml:"update"`
 	BulkMenu Keybinding `yaml:"bulkMenu"`
+}
+
+type KeybindingPullRequestsConfig struct {
+	Merge         Keybinding `yaml:"merge"`
+	Review        Keybinding `yaml:"review"`
+	Comment       Keybinding `yaml:"comment"`
+	ToggleDraft   Keybinding `yaml:"toggleDraft"`
+	CloseOrReopen Keybinding `yaml:"closeOrReopen"`
 }
 
 type KeybindingCommitMessageConfig struct {
@@ -1178,6 +1187,13 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 				Init:     Keybinding{"i"},
 				Update:   Keybinding{"u"},
 				BulkMenu: Keybinding{"b"},
+			},
+			PullRequests: KeybindingPullRequestsConfig{
+				Merge:         Keybinding{"M"},
+				Review:        Keybinding{"a"},
+				Comment:       Keybinding{"c"},
+				ToggleDraft:   Keybinding{"r"},
+				CloseOrReopen: Keybinding{"d"},
 			},
 			CommitMessage: KeybindingCommitMessageConfig{
 				CommitMenu: Keybinding{"<ctrl+o>"},

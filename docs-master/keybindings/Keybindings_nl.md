@@ -254,6 +254,14 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 | Key | Action | Info |
 |-----|--------|-------------|
+| `` <space> `` | Uitchecken | Check out the pull request's branch locally, creating it if needed (gh pr checkout). |
+| `` M `` | Merge pull request | Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass. |
+| `` a `` | Review pull request |  |
+| `` c `` | Add comment |  |
+| `` r `` | Mark as ready/convert to draft | Mark a draft pull request as ready for review, or convert an open one back to a draft. |
+| `` d `` | Close/reopen pull request |  |
+| `` G `` | Open pull request in browser |  |
+| `` <ctrl+y> `` | Kopieer de URL van het pull-verzoek naar het klembord |  |
 | `` R `` | Refresh pull requests |  |
 | `` / `` | Filter the current view by text |  |
 

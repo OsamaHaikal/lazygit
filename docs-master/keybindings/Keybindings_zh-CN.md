@@ -56,6 +56,14 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 | Key | Action | Info |
 |-----|--------|-------------|
+| `` <space> `` | 检出 | Check out the pull request's branch locally, creating it if needed (gh pr checkout). |
+| `` M `` | Merge pull request | Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass. |
+| `` a `` | Review pull request |  |
+| `` c `` | Add comment |  |
+| `` r `` | Mark as ready/convert to draft | Mark a draft pull request as ready for review, or convert an open one back to a draft. |
+| `` d `` | Close/reopen pull request |  |
+| `` G `` | 在浏览器中打开拉取请求 |  |
+| `` <ctrl+y> `` | 复制拉取请求 URL 到剪贴板 |  |
 | `` R `` | Refresh pull requests |  |
 | `` / `` | 通过文本过滤当前视图 |  |
 

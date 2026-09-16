@@ -1726,6 +1726,9 @@
         "submodules": {
           "$ref": "#/$defs/KeybindingSubmodulesConfig"
         },
+        "pullRequests": {
+          "$ref": "#/$defs/KeybindingPullRequestsConfig"
+        },
         "commitMessage": {
           "$ref": "#/$defs/KeybindingCommitMessageConfig"
         }
@@ -2083,6 +2086,82 @@
             }
           ],
           "default": "E"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "KeybindingPullRequestsConfig": {
+      "properties": {
+        "merge": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "M"
+        },
+        "review": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "a"
+        },
+        "comment": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "c"
+        },
+        "toggleDraft": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "r"
+        },
+        "closeOrReopen": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "d"
         }
       },
       "additionalProperties": false,

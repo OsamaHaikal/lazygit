@@ -383,6 +383,38 @@ type TranslationSet struct {
 	LoadPullRequestsError                 string
 	NoGithubRepoForPullRequests           string
 	GhNeededForPullRequests               string
+	CheckoutPullRequestTooltip            string
+	CheckingOutPullRequest                string
+	MergePullRequestOptions               string
+	MergePullRequestTooltip               string
+	MergeWithMergeCommit                  string
+	MergeWithSquash                       string
+	MergeWithRebase                       string
+	EnableAutoMerge                       string
+	EnableAutoMergeTooltip                string
+	MergingPullRequest                    string
+	CloseOrReopenPullRequest              string
+	ClosePullRequestTitle                 string
+	ClosePullRequestPrompt                string
+	ReopenPullRequestTitle                string
+	ReopenPullRequestPrompt               string
+	MergedPullRequestCantBeClosed         string
+	ClosingPullRequest                    string
+	ReopeningPullRequest                  string
+	TogglePullRequestDraft                string
+	TogglePullRequestDraftTooltip         string
+	PullRequestNotOpen                    string
+	UpdatingPullRequest                   string
+	CommentOnPullRequestTitle             string
+	PostingComment                        string
+	AddPullRequestComment                 string
+	ReviewPullRequestOptions              string
+	ApprovePullRequest                    string
+	RequestPullRequestChanges             string
+	CommentReview                         string
+	ReviewBodyTitle                       string
+	OptionalReviewBodyTitle               string
+	SubmittingReview                      string
 	ErrorOccurred                         string
 	ConflictLabel                         string
 	PendingRebaseTodosSectionHeader       string
@@ -1141,6 +1173,14 @@ type Actions struct {
 	OpenMergeTool                    string
 	OpenCommitInBrowser              string
 	OpenPullRequest                  string
+	CheckoutPullRequest              string
+	MergePullRequest                 string
+	ClosePullRequest                 string
+	ReopenPullRequest                string
+	MarkPullRequestReady             string
+	ConvertPullRequestToDraft        string
+	CommentOnPullRequest             string
+	ReviewPullRequest                string
 	StartBisect                      string
 	ResetBisect                      string
 	BisectSkip                       string
@@ -1559,6 +1599,38 @@ func EnglishTranslationSet() *TranslationSet {
 		LoadPullRequestsError:                "Couldn't load pull requests: {{.error}}",
 		NoGithubRepoForPullRequests:          "Couldn't tell which GitHub repository to list pull requests for. This needs a remote pointing at GitHub; if there are several, pick the one to use with 'gh repo set-default'.",
 		GhNeededForPullRequests:              "Managing pull requests needs the GitHub CLI. Install it from https://cli.github.com and log in with 'gh auth login'.",
+		CheckoutPullRequestTooltip:           "Check out the pull request's branch locally, creating it if needed (gh pr checkout).",
+		CheckingOutPullRequest:               "Checking out pull request",
+		MergePullRequestOptions:              "Merge pull request",
+		MergePullRequestTooltip:              "Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass.",
+		MergeWithMergeCommit:                 "Create a merge commit",
+		MergeWithSquash:                      "Squash and merge",
+		MergeWithRebase:                      "Rebase and merge",
+		EnableAutoMerge:                      "Enable auto-merge",
+		EnableAutoMergeTooltip:               "Let GitHub merge the pull request by itself once all its requirements are met.",
+		MergingPullRequest:                   "Merging pull request",
+		CloseOrReopenPullRequest:             "Close/reopen pull request",
+		ClosePullRequestTitle:                "Close pull request",
+		ClosePullRequestPrompt:               "Are you sure you want to close pull request #{{.number}}?",
+		ReopenPullRequestTitle:               "Reopen pull request",
+		ReopenPullRequestPrompt:              "Are you sure you want to reopen pull request #{{.number}}?",
+		MergedPullRequestCantBeClosed:        "A merged pull request can't be closed or reopened",
+		ClosingPullRequest:                   "Closing pull request",
+		ReopeningPullRequest:                 "Reopening pull request",
+		TogglePullRequestDraft:               "Mark as ready/convert to draft",
+		TogglePullRequestDraftTooltip:        "Mark a draft pull request as ready for review, or convert an open one back to a draft.",
+		PullRequestNotOpen:                   "This pull request isn't open",
+		UpdatingPullRequest:                  "Updating pull request",
+		CommentOnPullRequestTitle:            "Comment on #{{.number}}",
+		PostingComment:                       "Posting comment",
+		AddPullRequestComment:                "Add comment",
+		ReviewPullRequestOptions:             "Review pull request",
+		ApprovePullRequest:                   "Approve",
+		RequestPullRequestChanges:            "Request changes",
+		CommentReview:                        "Comment",
+		ReviewBodyTitle:                      "Review of #{{.number}}",
+		OptionalReviewBodyTitle:              "Review of #{{.number}} (optional)",
+		SubmittingReview:                     "Submitting review",
 		ErrorOccurred:                        "An error occurred! Please create an issue at",
 		ConflictLabel:                        "CONFLICT",
 		PendingRebaseTodosSectionHeader:      "Pending rebase todos",
@@ -2272,6 +2344,14 @@ func EnglishTranslationSet() *TranslationSet {
 			OpenMergeTool:                    "Open merge tool",
 			OpenCommitInBrowser:              "Open commit in browser",
 			OpenPullRequest:                  "Open pull request in browser",
+			CheckoutPullRequest:              "Checkout pull request",
+			MergePullRequest:                 "Merge pull request",
+			ClosePullRequest:                 "Close pull request",
+			ReopenPullRequest:                "Reopen pull request",
+			MarkPullRequestReady:             "Mark pull request as ready for review",
+			ConvertPullRequestToDraft:        "Convert pull request to draft",
+			CommentOnPullRequest:             "Comment on pull request",
+			ReviewPullRequest:                "Review pull request",
 			StartBisect:                      "Start bisect",
 			ResetBisect:                      "Reset bisect",
 			BisectSkip:                       "Bisect skip",

@@ -129,3 +129,67 @@ func TestListPullRequestsWithoutGh(t *testing.T) {
 	_, err := instance.ListPullRequests(testGithubRepo, PullRequestFilterOpen)
 	assert.ErrorIs(t, err, ErrGhNotInstalled)
 }
+
+func TestPullRequestCommands(t *testing.T) {
+	t.Setenv("GH_PATH", "gh")
+
+	cases := []struct {
+		name         string
+		run          func(*GitHubCommands) error
+		expectedArgs []string
+	}{
+		{
+			name:         "checkout",
+			run:          func(c *GitHubCommands) error { return c.CheckoutPullRequest(testGithubRepo, 12) },
+			expectedArgs: []string{"gh", "pr", "checkout", "12", "--repo", "github.com/jesseduffield/lazygit"},
+		},
+		{
+			name: "squash merge",
+			run: func(c *GitHubCommands) error {
+				return c.MergePullRequest(testGithubRepo, 12, PullRequestMergeMethodSquash, false)
+			},
+			expectedArgs: []string{"gh", "pr", "merge", "12", "--repo", "github.com/jesseduffield/lazygit", "--squash"},
+		},
+		{
+			name: "auto-merge",
+			run: func(c *GitHubCommands) error {
+				return c.MergePullRequest(testGithubRepo, 12, PullRequestMergeMethodRebase, true)
+			},
+			expectedArgs: []string{"gh", "pr", "merge", "12", "--repo", "github.com/jesseduffield/lazygit", "--rebase", "--auto"},
+		},
+		{
+			name:         "convert to draft",
+			run:          func(c *GitHubCommands) error { return c.ConvertPullRequestToDraft(testGithubRepo, 12) },
+			expectedArgs: []string{"gh", "pr", "ready", "12", "--repo", "github.com/jesseduffield/lazygit", "--undo"},
+		},
+		{
+			name:         "comment",
+			run:          func(c *GitHubCommands) error { return c.CommentOnPullRequest(testGithubRepo, 12, "Looks good") },
+			expectedArgs: []string{"gh", "pr", "comment", "12", "--repo", "github.com/jesseduffield/lazygit", "--body", "Looks good"},
+		},
+		{
+			name: "approve without a body",
+			run: func(c *GitHubCommands) error {
+				return c.ReviewPullRequest(testGithubRepo, 12, PullRequestReviewApprove, "")
+			},
+			expectedArgs: []string{"gh", "pr", "review", "12", "--repo", "github.com/jesseduffield/lazygit", "--approve"},
+		},
+		{
+			name: "request changes",
+			run: func(c *GitHubCommands) error {
+				return c.ReviewPullRequest(testGithubRepo, 12, PullRequestReviewRequestChanges, "Please add tests")
+			},
+			expectedArgs: []string{"gh", "pr", "review", "12", "--repo", "github.com/jesseduffield/lazygit", "--request-changes", "--body", "Please add tests"},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			runner := oscommands.NewFakeRunner(t).ExpectArgs(c.expectedArgs, "", nil)
+			instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+			assert.NoError(t, c.run(instance))
+			runner.CheckForMissingCalls()
+		})
+	}
+}

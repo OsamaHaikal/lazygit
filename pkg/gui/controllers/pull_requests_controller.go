@@ -1,9 +1,15 @@
 package controllers
 
 import (
+	"strconv"
+
+	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
+	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
+	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
 type PullRequestsController struct {
@@ -31,6 +37,63 @@ func NewPullRequestsController(
 
 func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) []*types.Binding {
 	bindings := []*types.Binding{
+		{
+			Keys:              opts.GetKeys(opts.Config.Universal.Select),
+			Handler:           self.withItem(self.checkout),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.Checkout,
+			Tooltip:           self.c.Tr.CheckoutPullRequestTooltip,
+			DisplayOnScreen:   true,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.Merge),
+			Handler:           self.withItem(self.merge),
+			GetDisabledReason: self.require(self.singleItemSelected(self.isOpen)),
+			Description:       self.c.Tr.MergePullRequestOptions,
+			Tooltip:           self.c.Tr.MergePullRequestTooltip,
+			OpensMenu:         true,
+			DisplayOnScreen:   true,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.Review),
+			Handler:           self.withItem(self.review),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.ReviewPullRequestOptions,
+			OpensMenu:         true,
+			DisplayOnScreen:   true,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.Comment),
+			Handler:           self.withItem(self.comment),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.AddPullRequestComment,
+			DisplayOnScreen:   true,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.ToggleDraft),
+			Handler:           self.withItem(self.toggleDraft),
+			GetDisabledReason: self.require(self.singleItemSelected(self.isOpen)),
+			Description:       self.c.Tr.TogglePullRequestDraft,
+			Tooltip:           self.c.Tr.TogglePullRequestDraftTooltip,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.CloseOrReopen),
+			Handler:           self.withItem(self.closeOrReopen),
+			GetDisabledReason: self.require(self.singleItemSelected(self.isNotMerged)),
+			Description:       self.c.Tr.CloseOrReopenPullRequest,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.Branches.OpenPullRequestInBrowser),
+			Handler:           self.withItem(self.openInBrowser),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.OpenPullRequestInBrowser,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.Branches.CopyPullRequestURL),
+			Handler:           self.withItem(self.copyURL),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.CopyPullRequestURL,
+		},
 		{
 			Keys:        opts.GetKeys(opts.Config.Universal.Refresh),
 			Handler:     self.refresh,
@@ -81,9 +144,195 @@ func (self *PullRequestsController) mainViewTask() types.UpdateTask {
 	return types.NewRunCommandTask(cmdObj.GetCmd())
 }
 
+func (self *PullRequestsController) checkout(pr *models.GithubPullRequest) error {
+	return self.runAction(self.c.Tr.Actions.CheckoutPullRequest, self.c.Tr.CheckingOutPullRequest,
+		func(repo hosting_service.ServiceInfo) error {
+			if err := self.c.Git().GitHub.CheckoutPullRequest(repo, pr.Number); err != nil {
+				return err
+			}
+			// Checking out changes the branches, commits, and files, not just
+			// the pull request
+			self.c.RefreshFromWorker(types.RefreshOptions{BranchSelection: types.SelectCheckedOutBranch})
+			return nil
+		})
+}
+
+func (self *PullRequestsController) merge(pr *models.GithubPullRequest) error {
+	menuItems := func(auto bool) []*types.MenuItem {
+		mergeItem := func(label string, method git_commands.PullRequestMergeMethod) *types.MenuItem {
+			return &types.MenuItem{
+				Label: label,
+				OnPress: func() error {
+					return self.runAction(self.c.Tr.Actions.MergePullRequest, self.c.Tr.MergingPullRequest,
+						func(repo hosting_service.ServiceInfo) error {
+							return self.c.Git().GitHub.MergePullRequest(repo, pr.Number, method, auto)
+						})
+				},
+			}
+		}
+
+		return []*types.MenuItem{
+			mergeItem(self.c.Tr.MergeWithMergeCommit, git_commands.PullRequestMergeMethodMerge),
+			mergeItem(self.c.Tr.MergeWithSquash, git_commands.PullRequestMergeMethodSquash),
+			mergeItem(self.c.Tr.MergeWithRebase, git_commands.PullRequestMergeMethodRebase),
+		}
+	}
+
+	items := append(menuItems(false), &types.MenuItem{
+		Label:   self.c.Tr.EnableAutoMerge,
+		Tooltip: self.c.Tr.EnableAutoMergeTooltip,
+		OnPress: func() error {
+			return self.c.Menu(types.CreateMenuOptions{
+				Title: self.c.Tr.EnableAutoMerge,
+				Items: menuItems(true),
+			})
+		},
+		OpensMenu: true,
+	})
+
+	return self.c.Menu(types.CreateMenuOptions{
+		Title: self.c.Tr.MergePullRequestOptions,
+		Items: items,
+	})
+}
+
+func (self *PullRequestsController) review(pr *models.GithubPullRequest) error {
+	reviewItem := func(label string, event git_commands.PullRequestReviewEvent, bodyTitle string, bodyRequired bool) *types.MenuItem {
+		return &types.MenuItem{
+			Label: label,
+			OnPress: func() error {
+				self.c.Prompt(types.PromptOpts{
+					Title:           self.resolvePlaceholders(bodyTitle, pr),
+					AllowEmptyInput: !bodyRequired,
+					HandleConfirm: func(body string) error {
+						return self.runAction(self.c.Tr.Actions.ReviewPullRequest, self.c.Tr.SubmittingReview,
+							func(repo hosting_service.ServiceInfo) error {
+								return self.c.Git().GitHub.ReviewPullRequest(repo, pr.Number, event, body)
+							})
+					},
+				})
+				return nil
+			},
+		}
+	}
+
+	return self.c.Menu(types.CreateMenuOptions{
+		Title: self.c.Tr.ReviewPullRequestOptions,
+		Items: []*types.MenuItem{
+			reviewItem(self.c.Tr.ApprovePullRequest, git_commands.PullRequestReviewApprove, self.c.Tr.OptionalReviewBodyTitle, false),
+			reviewItem(self.c.Tr.RequestPullRequestChanges, git_commands.PullRequestReviewRequestChanges, self.c.Tr.ReviewBodyTitle, true),
+			reviewItem(self.c.Tr.CommentReview, git_commands.PullRequestReviewComment, self.c.Tr.ReviewBodyTitle, true),
+		},
+	})
+}
+
+func (self *PullRequestsController) comment(pr *models.GithubPullRequest) error {
+	self.c.Prompt(types.PromptOpts{
+		Title: self.resolvePlaceholders(self.c.Tr.CommentOnPullRequestTitle, pr),
+		HandleConfirm: func(body string) error {
+			return self.runAction(self.c.Tr.Actions.CommentOnPullRequest, self.c.Tr.PostingComment,
+				func(repo hosting_service.ServiceInfo) error {
+					return self.c.Git().GitHub.CommentOnPullRequest(repo, pr.Number, body)
+				})
+		},
+	})
+	return nil
+}
+
+func (self *PullRequestsController) toggleDraft(pr *models.GithubPullRequest) error {
+	if pr.State == "DRAFT" {
+		return self.runAction(self.c.Tr.Actions.MarkPullRequestReady, self.c.Tr.UpdatingPullRequest,
+			func(repo hosting_service.ServiceInfo) error {
+				return self.c.Git().GitHub.MarkPullRequestReady(repo, pr.Number)
+			})
+	}
+
+	return self.runAction(self.c.Tr.Actions.ConvertPullRequestToDraft, self.c.Tr.UpdatingPullRequest,
+		func(repo hosting_service.ServiceInfo) error {
+			return self.c.Git().GitHub.ConvertPullRequestToDraft(repo, pr.Number)
+		})
+}
+
+func (self *PullRequestsController) closeOrReopen(pr *models.GithubPullRequest) error {
+	if pr.State == "CLOSED" {
+		self.c.Confirm(types.ConfirmOpts{
+			Title:  self.c.Tr.ReopenPullRequestTitle,
+			Prompt: self.resolvePlaceholders(self.c.Tr.ReopenPullRequestPrompt, pr),
+			HandleConfirm: func() error {
+				return self.runAction(self.c.Tr.Actions.ReopenPullRequest, self.c.Tr.ReopeningPullRequest,
+					func(repo hosting_service.ServiceInfo) error {
+						return self.c.Git().GitHub.ReopenPullRequest(repo, pr.Number)
+					})
+			},
+		})
+		return nil
+	}
+
+	self.c.Confirm(types.ConfirmOpts{
+		Title:  self.c.Tr.ClosePullRequestTitle,
+		Prompt: self.resolvePlaceholders(self.c.Tr.ClosePullRequestPrompt, pr),
+		HandleConfirm: func() error {
+			return self.runAction(self.c.Tr.Actions.ClosePullRequest, self.c.Tr.ClosingPullRequest,
+				func(repo hosting_service.ServiceInfo) error {
+					return self.c.Git().GitHub.ClosePullRequest(repo, pr.Number)
+				})
+		},
+	})
+	return nil
+}
+
+func (self *PullRequestsController) openInBrowser(pr *models.GithubPullRequest) error {
+	self.c.LogAction(self.c.Tr.Actions.OpenPullRequest)
+	return self.c.OS().OpenLink(pr.Url)
+}
+
+func (self *PullRequestsController) copyURL(pr *models.GithubPullRequest) error {
+	self.c.LogAction(self.c.Tr.Actions.CopyPullRequestURL)
+	if err := self.c.OS().CopyToClipboard(pr.Url); err != nil {
+		return err
+	}
+
+	self.c.Toast(self.c.Tr.PullRequestURLCopiedToClipboard)
+	return nil
+}
+
 func (self *PullRequestsController) refresh() error {
 	self.c.Helpers().PullRequests.Load()
 	return nil
+}
+
+// runAction runs a gh command that changes a pull request, then reloads the
+// pull request list so that it reflects the change.
+func (self *PullRequestsController) runAction(action string, waitingStatus string, f func(repo hosting_service.ServiceInfo) error) error {
+	repo := *self.c.Model().PullRequestListState.Repo
+
+	return self.c.WithWaitingStatus(waitingStatus, func(gocui.Task) error {
+		self.c.LogAction(action)
+		err := f(repo)
+		self.c.OnUIThread(func() error {
+			self.c.Helpers().PullRequests.Load()
+			return nil
+		})
+		return err
+	})
+}
+
+func (self *PullRequestsController) isOpen(pr *models.GithubPullRequest) *types.DisabledReason {
+	if pr.State != "OPEN" && pr.State != "DRAFT" {
+		return &types.DisabledReason{Text: self.c.Tr.PullRequestNotOpen}
+	}
+	return nil
+}
+
+func (self *PullRequestsController) isNotMerged(pr *models.GithubPullRequest) *types.DisabledReason {
+	if pr.State == "MERGED" {
+		return &types.DisabledReason{Text: self.c.Tr.MergedPullRequestCantBeClosed}
+	}
+	return nil
+}
+
+func (self *PullRequestsController) resolvePlaceholders(template string, pr *models.GithubPullRequest) string {
+	return utils.ResolvePlaceholderString(template, map[string]string{"number": strconv.Itoa(pr.Number)})
 }
 
 func (self *PullRequestsController) context() *context.PullRequestsContext {
