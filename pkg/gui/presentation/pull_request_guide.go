@@ -21,10 +21,15 @@ var inlineCodeRegex = regexp.MustCompile("`([^`\n]+)`")
 func FormatPullRequestGuideChapter(
 	guide *git_commands.PullRequestGuide,
 	chapter *git_commands.GuideChapter,
+	notice string,
 	writtenBy string,
 	tr *i18n.TranslationSet,
 ) string {
 	var builder strings.Builder
+
+	if notice != "" {
+		builder.WriteString(style.FgYellow.Sprint("⚠ "+notice) + "\n\n")
+	}
 
 	builder.WriteString(style.FgYellow.SetBold().Sprint(chapter.Title) + "\n")
 	builder.WriteString(style.FgDefault.Sprint(writtenBy) + "\n\n")

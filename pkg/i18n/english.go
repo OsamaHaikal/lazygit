@@ -464,6 +464,7 @@ type TranslationSet struct {
 	PullRequestGuideCancelled             string
 	PullRequestGuideNotBeingWritten       string
 	GuideHunkAlsoExplainedIn              string
+	PullRequestChangedSinceGuide          string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1738,6 +1739,7 @@ func EnglishTranslationSet() *TranslationSet {
 		PullRequestGuideCancelled:            "you stopped it",
 		PullRequestGuideNotBeingWritten:      "The guide isn't being written",
 		GuideHunkAlsoExplainedIn:             "Also explained in {{.chapters}}",
+		PullRequestChangedSinceGuide:         "The pull request has changed since this guide was written. Press {{.key}} to write it again.",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

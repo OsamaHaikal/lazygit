@@ -7,6 +7,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/patch"
+	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
@@ -115,7 +116,13 @@ func (self *PullRequestGuideController) mainViewContent() string {
 			map[string]string{"provider": state.Guide.Provider, "model": state.Guide.Model})
 	}
 
-	return presentation.FormatPullRequestGuideChapter(state.Guide, chapter, writtenBy, self.c.Tr)
+	notice := ""
+	if pr := self.pullRequest(); pr.HeadRefOid != state.Head.RefName() {
+		notice = utils.ResolvePlaceholderString(self.c.Tr.PullRequestChangedSinceGuide,
+			map[string]string{"key": self.c.UserConfig().Keybinding.Universal.Refresh[0]})
+	}
+
+	return presentation.FormatPullRequestGuideChapter(state.Guide, chapter, notice, writtenBy, self.c.Tr)
 }
 
 func (self *PullRequestGuideController) GetOnDoubleClick() func() error {
@@ -169,30 +176,56 @@ func (self *PullRequestGuideController) viewAllFiles() error {
 	return nil
 }
 
-func (self *PullRequestGuideController) rewrite() error {
-	state := self.context().GetGuideState()
+// pullRequest returns the pull request whose guide is shown, as it is in the
+// pull request list, which is newer than the one the guide was written for if
+// the list has been reloaded since
+func (self *PullRequestGuideController) pullRequest() *models.GithubPullRequest {
 	pr, found := lo.Find(self.c.Model().PullRequestList, func(pr *models.GithubPullRequest) bool {
 		return pr.Number == self.context().GetNumber()
 	})
 	if !found {
-		pr = state.Head.PullRequest
+		return self.context().GetGuideState().Head.PullRequest
+	}
+	return pr
+}
+
+func (self *PullRequestGuideController) rewrite() error {
+	state := self.context().GetGuideState()
+	pr := self.pullRequest()
+
+	write := func() error {
+		if pr.HeadRefOid == state.Head.RefName() {
+			self.c.Helpers().PullRequests.RewriteGuide(pr, state.Head)
+			return nil
+		}
+
+		// The pull request has changed since the guide was written, so the
+		// new guide needs to be for its new commits
+		remoteName := self.c.Model().PullRequestListState.RemoteName
+		return self.c.WithWaitingStatus(self.c.Tr.FetchingPullRequest, func(task gocui.Task) error {
+			head, err := self.c.Helpers().PullRequests.FetchPullRequestHead(task, pr, remoteName)
+			if err != nil {
+				return err
+			}
+			self.c.OnUIThread(func() error {
+				self.c.Helpers().PullRequests.RewriteGuide(pr, head)
+				return nil
+			})
+			return nil
+		})
 	}
 
 	// Retrying after a failure costs nothing, so only ask when there's a guide
 	// that would be replaced
 	if state.Err != nil {
-		self.c.Helpers().PullRequests.RewriteGuide(pr, state.Head)
-		return nil
+		return write()
 	}
 
 	self.c.Confirm(types.ConfirmOpts{
 		Title: self.c.Tr.RegeneratePullRequestGuideTitle,
 		Prompt: utils.ResolvePlaceholderString(self.c.Tr.RegeneratePullRequestGuidePrompt,
 			map[string]string{"provider": state.Guide.Provider}),
-		HandleConfirm: func() error {
-			self.c.Helpers().PullRequests.RewriteGuide(pr, state.Head)
-			return nil
-		},
+		HandleConfirm: write,
 	})
 	return nil
 }
