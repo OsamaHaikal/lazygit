@@ -21,8 +21,9 @@ func NewCommitFileLoader(common *common.Common, cmd oscommands.ICmdObjBuilder) *
 	}
 }
 
-// GetFilesInDiff get the specified commit files
-func (self *CommitFileLoader) GetFilesInDiff(from string, to string, reverse bool) ([]*models.CommitFile, error) {
+// GetFilesInDiff get the specified commit files. If paths isn't empty, only
+// the files at those paths are included.
+func (self *CommitFileLoader) GetFilesInDiff(from string, to string, reverse bool, paths []string) ([]*models.CommitFile, error) {
 	cmdArgs := NewGitCmd("diff").
 		Config("diff.noprefix=false").
 		Arg("--submodule").
@@ -33,6 +34,8 @@ func (self *CommitFileLoader) GetFilesInDiff(from string, to string, reverse boo
 		ArgIf(reverse, "-R").
 		Arg(from).
 		Arg(to).
+		ArgIf(len(paths) > 0, "--").
+		Arg(paths...).
 		ToArgv()
 
 	filenames, err := self.cmd.New(cmdArgs).DontLog().RunWithOutput()

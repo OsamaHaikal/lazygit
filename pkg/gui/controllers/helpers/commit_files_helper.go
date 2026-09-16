@@ -25,6 +25,10 @@ type ViewCommitFilesOpts struct {
 	CanRebase bool
 	// The context to return to when leaving the files view
 	Context types.IListContext
+	// If not empty, only the files at these paths are shown
+	Paths []string
+	// What to show the files of in the view's title, instead of the ref
+	TitleRef string
 }
 
 // ViewCommitFiles shows the files changed by a ref (or by a range of refs) in
@@ -33,7 +37,11 @@ func (self *CommitFilesHelper) ViewCommitFiles(opts ViewCommitFilesOpts) {
 	commitFilesContext := self.c.Contexts().CommitFiles
 
 	commitFilesContext.ClearFilter()
-	commitFilesContext.ReInit(opts.Ref, opts.RefRange)
+	commitFilesContext.ReInitForPaths(opts.Ref, opts.RefRange, opts.Paths)
+	if opts.TitleRef != "" {
+		commitFilesContext.SetTitleRef(opts.TitleRef)
+		commitFilesContext.GetView().Title = commitFilesContext.Title()
+	}
 	commitFilesContext.SetSelection(0)
 	commitFilesContext.SetCanRebase(opts.CanRebase)
 	commitFilesContext.SetParentContext(opts.Context)

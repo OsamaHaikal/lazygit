@@ -16,6 +16,9 @@ type CommitFilesContext struct {
 	*filetree.CommitFileTreeViewModel
 	*ListContextTrait
 	*DynamicTitleBuilder
+
+	// If not empty, only the files at these paths are shown
+	paths []string
 }
 
 var (
@@ -87,9 +90,20 @@ func (self *CommitFilesContext) GetFromAndToForDiff() (string, string) {
 	return ref.ParentRefName(), ref.RefName()
 }
 
+func (self *CommitFilesContext) GetPaths() []string {
+	return self.paths
+}
+
 func (self *CommitFilesContext) ReInit(ref models.Ref, refRange *types.RefRange) {
+	self.ReInitForPaths(ref, refRange, nil)
+}
+
+// ReInitForPaths is like ReInit, but only shows the files at the given paths,
+// unless there are none.
+func (self *CommitFilesContext) ReInitForPaths(ref models.Ref, refRange *types.RefRange, paths []string) {
 	self.SetRef(ref)
 	self.SetRefRange(refRange)
+	self.paths = paths
 	if refRange != nil {
 		self.SetTitleRef(fmt.Sprintf("%s-%s", refRange.From.ShortRefName(), refRange.To.ShortRefName()))
 	} else {

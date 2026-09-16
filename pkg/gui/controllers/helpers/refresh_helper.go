@@ -1072,6 +1072,7 @@ type capturedCommitFilesState struct {
 	from    string
 	to      string
 	reverse bool
+	paths   []string
 }
 
 // captureCommitFilesState reads the commit-files refresh's diff endpoints into
@@ -1079,11 +1080,11 @@ type capturedCommitFilesState struct {
 func (self *RefreshHelper) captureCommitFilesState() capturedCommitFilesState {
 	from, to := self.c.Contexts().CommitFiles.GetFromAndToForDiff()
 	from, reverse := self.c.Modes().Diffing.GetFromAndReverseArgsForDiff(from)
-	return capturedCommitFilesState{from: from, to: to, reverse: reverse}
+	return capturedCommitFilesState{from: from, to: to, reverse: reverse, paths: self.c.Contexts().CommitFiles.GetPaths()}
 }
 
 func (self *RefreshHelper) refreshCommitFilesContext(captured capturedCommitFilesState, env refreshEnv) error {
-	files, err := env.git.Loaders.CommitFileLoader.GetFilesInDiff(captured.from, captured.to, captured.reverse)
+	files, err := env.git.Loaders.CommitFileLoader.GetFilesInDiff(captured.from, captured.to, captured.reverse, captured.paths)
 	if err != nil {
 		return err
 	}
