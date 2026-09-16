@@ -504,3 +504,12 @@ func parseReviewComments(output string) ([]*models.PullRequestReviewComment, err
 
 	return comments, nil
 }
+
+func (self *GitHubCommands) GetPullRequestDescription(repo hosting_service.ServiceInfo, number int) (string, error) {
+	cmdObj, err := self.ghCmdObj("pr", "view", strconv.Itoa(number), "--repo", ghRepoArg(repo), "--json", "body", "--jq", ".body")
+	if err != nil {
+		return "", err
+	}
+
+	return cmdObj.DontLog().RunWithOutput()
+}
