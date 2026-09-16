@@ -1,7 +1,9 @@
 package pull_request
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jesseduffield/lazygit/pkg/config"
 	. "github.com/jesseduffield/lazygit/pkg/integration/components"
@@ -22,7 +24,15 @@ var PullRequestGuide = NewIntegrationTest(NewIntegrationTestArgs{
 	},
 	SetupRepo: func(shell *Shell) {
 		setupGhRepo(shell)
+		shell.CreateFileAndAdd("config.txt", numberedLines(1, 20))
+		shell.Commit("add config")
 		setupPullRequestCommits(shell)
+
+		// Change a line near the top and one near the bottom of the config,
+		// making for two hunks that belong to different chapters
+		shell.CreateFile("../contributor/config.txt",
+			numberedLines(1, 1)+"line 2 for the docs\n"+numberedLines(3, 17)+"line 18 for the feature\n"+numberedLines(19, 20))
+		shell.RunCommand([]string{"git", "-C", "../contributor", "commit", "-am", "configure feature"})
 
 		// Give the pull request a second file, so that its guide has two
 		// chapters
@@ -38,7 +48,7 @@ cat > /dev/null
 echo "$@" | grep -o -- "--model [a-z]*" >> "$(dirname "$0")/claude-calls.txt"
 cat <<'GUIDE'
 {"type": "assistant", "message": {"content": [{"type": "text", "text": "Progress: Grouping the hunks"}]}}
-{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Add the feature", "explanation": "Creates `+"`feature.txt`"+` with the improved feature.", "hunks": ["f1-h0"]}, {"title": "Document the feature", "explanation": "Explains how to use it.", "hunks": ["f0-h0"]}]}}
+{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Add the feature", "explanation": "Creates `+"`feature.txt`"+` with the improved feature.", "hunks": ["f2-h0", "f0-h1"]}, {"title": "Document the feature", "explanation": "Explains how to use it.", "hunks": ["f1-h0", "f0-h0"]}]}}
 GUIDE
 `)
 		shell.MakeExecutable("../bin/claude")
@@ -69,7 +79,9 @@ GUIDE
 				Contains("Creates feature.txt with the improved feature.").
 				Contains("feature.txt").
 				Contains("+feature, improved").
-				DoesNotContain("How to use the feature"),
+				Contains("+line 18 for the feature").
+				DoesNotContain("How to use the feature").
+				DoesNotContain("line 2 for the docs"),
 		)
 
 		t.Views().PullRequestGuide().PressEnter()
@@ -78,8 +90,22 @@ GUIDE
 			IsFocused().
 			Title(Contains("Add the feature")).
 			Lines(
-				Equals("A feature.txt").IsSelected(),
+				Equals("▼ /").IsSelected(),
+				Equals("  M config.txt"),
+				Equals("  A feature.txt"),
 			).
+			NavigateToLine(Contains("config.txt")).
+			PressEnter()
+
+		// The diff starts at the chapter's change, not at the file's first one
+		t.Views().PatchBuilding().
+			IsFocused().
+			SelectedLine(Contains("+line 18 for the feature")).
+			PressEscape()
+
+		t.Views().CommitFiles().
+			IsFocused().
+			NavigateToLine(Contains("feature.txt")).
 			PressEnter()
 
 		t.Views().PatchBuilding().
@@ -103,8 +129,20 @@ GUIDE
 			IsFocused().
 			Title(Contains("Document the feature")).
 			Lines(
-				Equals("A docs.md").IsSelected(),
+				Equals("▼ /").IsSelected(),
+				Equals("  M config.txt"),
+				Equals("  A docs.md"),
 			).
+			NavigateToLine(Contains("config.txt")).
+			PressEnter()
+
+		t.Views().PatchBuilding().
+			IsFocused().
+			SelectedLine(Contains("+line 2 for the docs")).
+			PressEscape()
+
+		t.Views().CommitFiles().
+			IsFocused().
 			PressEscape()
 
 		t.Views().PullRequestGuide().
@@ -125,3 +163,12 @@ GUIDE
 		t.FileSystem().FileContent("../bin/claude-calls.txt", Equals("--model sonnet\n"))
 	},
 })
+
+// numberedLines returns lines like "line 3\n" for the given range of numbers
+func numberedLines(from int, to int) string {
+	var builder strings.Builder
+	for i := from; i <= to; i++ {
+		fmt.Fprintf(&builder, "line %d\n", i)
+	}
+	return builder.String()
+}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/commands/patch"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
@@ -132,12 +133,31 @@ func (self *PullRequestGuideController) viewChapterFiles(chapter *git_commands.G
 	}))
 
 	self.c.Helpers().CommitFiles.ViewCommitFiles(helpers.ViewCommitFilesOpts{
-		Ref:      state.Head,
-		Context:  self.context(),
-		Paths:    paths,
-		TitleRef: chapter.Title,
+		Ref:           state.Head,
+		Context:       self.context(),
+		Paths:         paths,
+		TitleRef:      chapter.Title,
+		LinesToSelect: firstChangedLines(state.Guide.Units(*chapter)),
 	})
 	return nil
+}
+
+// firstChangedLines returns the first line that the given units change in
+// each of their files, so that going into a file's diff shows what the
+// chapter is about rather than whatever the file's first change is.
+func firstChangedLines(units []git_commands.GuideReviewUnit) map[string]patch.FileLine {
+	lines := map[string]patch.FileLine{}
+	for _, unit := range units {
+		if _, ok := lines[unit.Path]; ok {
+			continue
+		}
+
+		unitPatch := patch.Parse(unit.Diff)
+		if line, ok := unitPatch.FileLineOfLine(unitPatch.GetNextChangeIdx(0)); ok {
+			lines[unit.Path] = line
+		}
+	}
+	return lines
 }
 
 func (self *PullRequestGuideController) viewAllFiles() error {
