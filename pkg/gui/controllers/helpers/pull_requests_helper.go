@@ -7,7 +7,6 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
-	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/utils"
@@ -56,7 +55,7 @@ func (self *PullRequestsHelper) Load() {
 	// The request goes over the network and can take a while, but runs no git
 	// commands against the repo, so it mustn't count towards lazygit being busy.
 	self.c.OnWorkerBackground(func(gocui.Task) error {
-		repo, prs, err := self.loadPullRequestList(git, filter)
+		remote, prs, err := self.loadPullRequestList(git, filter)
 
 		self.c.OnUIThreadBackground(func() error {
 			if self.c.State().GetRepoGeneration() != generation || state.LoadID != loadID {
@@ -74,7 +73,8 @@ func (self *PullRequestsHelper) Load() {
 				}
 			} else {
 				state.Err = nil
-				state.Repo = repo
+				state.Repo = &remote.serviceInfo
+				state.RemoteName = remote.remote.Name
 				self.c.Model().PullRequestList = prs
 			}
 
@@ -85,7 +85,7 @@ func (self *PullRequestsHelper) Load() {
 	})
 }
 
-func (self *PullRequestsHelper) loadPullRequestList(git *commands.GitCommand, filter git_commands.PullRequestFilter) (*hosting_service.ServiceInfo, []*models.GithubPullRequest, error) {
+func (self *PullRequestsHelper) loadPullRequestList(git *commands.GitCommand, filter git_commands.PullRequestFilter) (*githubRemoteInfo, []*models.GithubPullRequest, error) {
 	if !git.GitHub.IsGhInstalled() {
 		return nil, nil, errors.New(self.c.Tr.GhNeededForPullRequests)
 	}
@@ -108,7 +108,33 @@ func (self *PullRequestsHelper) loadPullRequestList(git *commands.GitCommand, fi
 		))
 	}
 
-	return &baseRemote.serviceInfo, prs, nil
+	return baseRemote, prs, nil
+}
+
+// FetchPullRequestHead makes sure the pull request's commits are available
+// locally, fetching them if they aren't, and finds where it branched off its
+// base branch. Must be called on a worker.
+func (self *PullRequestsHelper) FetchPullRequestHead(task gocui.Task, pr *models.GithubPullRequest, remoteName string) (*models.PullRequestHead, error) {
+	github := self.c.Git().GitHub
+	if !github.HasCommits(pr.HeadRefOid, pr.BaseRefOid) {
+		if err := github.FetchPullRequest(task, remoteName, pr.Number, pr.BaseRefName); err != nil {
+			return nil, err
+		}
+
+		// The list is a snapshot; if the pull request has been pushed to or
+		// its base branch has moved on since, we won't have fetched the
+		// commits it knows about.
+		if !github.HasCommits(pr.HeadRefOid, pr.BaseRefOid) {
+			return nil, errors.New(self.c.Tr.PullRequestChangedSinceLoaded)
+		}
+	}
+
+	mergeBase, err := github.MergeBase(pr.HeadRefOid, pr.BaseRefOid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.PullRequestHead{PullRequest: pr, MergeBaseOid: mergeBase}, nil
 }
 
 // SetFilter switches the pull request list to the given filter and loads it.

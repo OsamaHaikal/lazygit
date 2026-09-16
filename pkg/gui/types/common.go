@@ -404,8 +404,10 @@ type Model struct {
 
 type PullRequestListState struct {
 	Filter git_commands.PullRequestFilter
-	// The GitHub repo that the list was loaded from; nil until a load succeeds.
-	Repo *hosting_service.ServiceInfo
+	// The GitHub repo that the list was loaded from, and the name of the remote
+	// pointing at it; nil and empty until a load succeeds.
+	Repo       *hosting_service.ServiceInfo
+	RemoteName string
 	// Why the last load failed, if it did
 	Err      error
 	Loading  bool

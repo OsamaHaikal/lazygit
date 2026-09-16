@@ -2176,6 +2176,20 @@
             }
           ],
           "default": "f"
+        },
+        "viewFiles": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "F"
         }
       },
       "additionalProperties": false,

@@ -11,6 +11,9 @@ import (
 // invocation to gh-calls.txt in the repo so tests can check what was run. The
 // search query of each GraphQL request goes to gh-searches.txt.
 //
+// The oids of pull request #12 are filled in from the "origin" repo next to the
+// test repo, for the tests that set one up with setupPullRequestCommits.
+//
 // The remote lives on a host under .invalid (configured as a GitHub instance)
 // so that the pull request lookups the branches panel does over HTTP fail
 // straight away instead of reaching out to github.com.
@@ -32,7 +35,9 @@ const pullRequestsJson = `{"data":{"search":{"nodes":[
 		"state": "OPEN",
 		"isDraft": false,
 		"headRefName": "feature",
+		"headRefOid": "HEAD_OID_12",
 		"baseRefName": "master",
+		"baseRefOid": "BASE_OID_12",
 		"reviewDecision": "APPROVED",
 		"additions": 10,
 		"deletions": 2,
@@ -73,7 +78,10 @@ case "$1 $2" in
 "api graphql")
     for last; do :; done
     echo "$last" >> gh-searches.txt
-    cat "$(dirname "$0")/pull_requests.json"
+    origin="$(dirname "$0")/../origin"
+    sed -e "s/HEAD_OID_12/$(git -C "$origin" rev-parse refs/pull/12/head 2>/dev/null)/" \
+        -e "s/BASE_OID_12/$(git -C "$origin" rev-parse master 2>/dev/null)/" \
+        "$(dirname "$0")/pull_requests.json"
     ;;
 "pr view")
     echo "Viewing pull request $3"
@@ -84,4 +92,25 @@ case "$1 $2" in
 esac
 `)
 	shell.MakeExecutable("../bin/gh")
+}
+
+// setupPullRequestCommits creates an "origin" repo for the remote to point at,
+// with pull request #12 on it: a commit adding feature.txt, made by someone
+// else so that the test repo doesn't have it. Meanwhile master has moved on,
+// so the pull request's changes are only the ones since it branched off.
+func setupPullRequestCommits(shell *Shell) {
+	shell.Clone("origin")
+	shell.SetConfig("url.../origin.insteadOf", "https://github.invalid/owner/repo.git")
+
+	shell.CloneNonBare("contributor")
+	shell.CreateFile("../contributor/feature.txt", "feature\n")
+	shell.RunCommand([]string{"git", "-C", "../contributor", "add", "feature.txt"})
+	shell.RunCommand([]string{"git", "-C", "../contributor", "commit", "-m", "add feature"})
+	shell.CreateFile("../contributor/feature.txt", "feature, improved\n")
+	shell.RunCommand([]string{"git", "-C", "../contributor", "commit", "-am", "improve feature"})
+	shell.RunCommand([]string{"git", "-C", "../contributor", "push", "../origin", "HEAD:refs/pull/12/head"})
+
+	shell.CreateFileAndAdd("master.txt", "master\n")
+	shell.Commit("master moves on")
+	shell.RunCommand([]string{"git", "push", "origin", "master"})
 }

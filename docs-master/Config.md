@@ -831,6 +831,7 @@ keybinding:
     toggleDraft: r
     closeOrReopen: d
     filter: f
+    viewFiles: F
   commitMessage:
     commitMenu: <ctrl+o>
 ```

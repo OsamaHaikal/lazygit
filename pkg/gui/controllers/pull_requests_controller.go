@@ -40,6 +40,20 @@ func NewPullRequestsController(
 func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) []*types.Binding {
 	bindings := []*types.Binding{
 		{
+			Keys:              opts.GetKeys(opts.Config.Universal.GoInto),
+			Handler:           self.withItem(self.viewCommits),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.ViewPullRequestCommits,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.ViewFiles),
+			Handler:           self.withItem(self.viewFiles),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.ViewPullRequestFiles,
+			Tooltip:           self.c.Tr.ViewPullRequestFilesTooltip,
+			DisplayOnScreen:   true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.Universal.Select),
 			Handler:           self.withItem(self.checkout),
 			GetDisabledReason: self.require(self.singleItemSelected()),
@@ -114,6 +128,10 @@ func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) [
 	return bindings
 }
 
+func (self *PullRequestsController) GetOnDoubleClick() func() error {
+	return self.withItemGraceful(self.viewCommits)
+}
+
 func (self *PullRequestsController) GetOnFocus() func(types.OnFocusOpts) {
 	return func(types.OnFocusOpts) {
 		self.c.Helpers().PullRequests.LoadIfStale()
@@ -152,6 +170,45 @@ func (self *PullRequestsController) mainViewTask() types.UpdateTask {
 	}
 
 	return types.NewRunCommandTask(cmdObj.GetCmd())
+}
+
+func (self *PullRequestsController) viewCommits(pr *models.GithubPullRequest) error {
+	return self.withPullRequestHead(pr, func(head *models.PullRequestHead) error {
+		return self.c.Helpers().SubCommits.ViewSubCommits(helpers.ViewSubCommitsOpts{
+			Ref:          head,
+			RefToExclude: head.MergeBaseOid,
+			TitleRef:     head.Description(),
+			Context:      self.context(),
+		})
+	})
+}
+
+func (self *PullRequestsController) viewFiles(pr *models.GithubPullRequest) error {
+	return self.withPullRequestHead(pr, func(head *models.PullRequestHead) error {
+		self.c.Helpers().CommitFiles.ViewCommitFiles(helpers.ViewCommitFilesOpts{
+			Ref:     head,
+			Context: self.context(),
+		})
+		return nil
+	})
+}
+
+// withPullRequestHead fetches the pull request if needed, then calls f with its
+// head on the UI thread.
+func (self *PullRequestsController) withPullRequestHead(pr *models.GithubPullRequest, f func(*models.PullRequestHead) error) error {
+	remoteName := self.c.Model().PullRequestListState.RemoteName
+
+	return self.c.WithWaitingStatus(self.c.Tr.FetchingPullRequest, func(task gocui.Task) error {
+		head, err := self.c.Helpers().PullRequests.FetchPullRequestHead(task, pr, remoteName)
+		if err != nil {
+			return err
+		}
+
+		self.c.OnUIThread(func() error {
+			return f(head)
+		})
+		return nil
+	})
 }
 
 func (self *PullRequestsController) checkout(pr *models.GithubPullRequest) error {

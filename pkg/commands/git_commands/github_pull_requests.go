@@ -11,6 +11,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/samber/lo"
 )
 
@@ -278,4 +279,33 @@ func (self *GitHubCommands) runPullRequestCommand(repo hosting_service.ServiceIn
 	}
 
 	return cmdObj.Run()
+}
+
+// FetchPullRequest fetches a pull request's head and its base branch from the
+// remote of the repo it was opened against, so that its commits are available
+// locally. It creates no refs, not even FETCH_HEAD, so it leaves no trace other
+// than the fetched objects.
+func (self *GitHubCommands) FetchPullRequest(task gocui.Task, remoteName string, number int, baseRefName string) error {
+	cmdArgs := NewGitCmd("fetch").
+		Arg("--no-tags", "--no-write-fetch-head", remoteName).
+		Arg(fmt.Sprintf("refs/pull/%d/head", number), "refs/heads/"+baseRefName).
+		ToArgv()
+
+	return self.cmd.New(cmdArgs).PromptOnCredentialRequest(task).Run()
+}
+
+// HasCommits returns whether all of the given commits exist locally.
+func (self *GitHubCommands) HasCommits(hashes ...string) bool {
+	cmdArgs := NewGitCmd("cat-file").Arg("--batch-check").ToArgv()
+	input := strings.Join(lo.Map(hashes, func(hash string, _ int) string { return hash + "^{commit}" }), "\n") + "\n"
+
+	output, err := self.cmd.New(cmdArgs).SetStdin(input).DontLog().RunWithOutput()
+	return err == nil && !strings.Contains(output, "missing")
+}
+
+func (self *GitHubCommands) MergeBase(hash1 string, hash2 string) (string, error) {
+	cmdArgs := NewGitCmd("merge-base").Arg(hash1, hash2).ToArgv()
+
+	output, err := self.cmd.New(cmdArgs).DontLog().RunWithOutput()
+	return strings.TrimSpace(output), err
 }

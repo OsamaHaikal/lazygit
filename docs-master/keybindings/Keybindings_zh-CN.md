@@ -56,6 +56,8 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 
 | Key | Action | Info |
 |-----|--------|-------------|
+| `` <enter> `` | View commits |  |
+| `` F `` | View files changed | Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab. |
 | `` <space> `` | 检出 | Check out the pull request's branch locally, creating it if needed (gh pr checkout). |
 | `` M `` | Merge pull request | Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass. |
 | `` a `` | Review pull request |  |

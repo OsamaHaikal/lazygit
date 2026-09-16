@@ -417,6 +417,11 @@ type TranslationSet struct {
 	PullRequestFilterMerged               string
 	PullRequestFilterClosed               string
 	PullRequestFilterAll                  string
+	FetchingPullRequest                   string
+	PullRequestChangedSinceLoaded         string
+	ViewPullRequestCommits                string
+	ViewPullRequestFiles                  string
+	ViewPullRequestFilesTooltip           string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1642,6 +1647,11 @@ func EnglishTranslationSet() *TranslationSet {
 		PullRequestFilterMerged:              "Merged",
 		PullRequestFilterClosed:              "Closed",
 		PullRequestFilterAll:                 "All",
+		FetchingPullRequest:                  "Fetching pull request",
+		PullRequestChangedSinceLoaded:        "The pull request has changed since the list was loaded. Refresh the list and try again.",
+		ViewPullRequestCommits:               "View commits",
+		ViewPullRequestFiles:                 "View files changed",
+		ViewPullRequestFilesTooltip:          "Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab.",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

@@ -413,6 +413,7 @@ var tests = []*components.IntegrationTest{
 	pull_request.FilterPullRequests,
 	pull_request.ListPullRequests,
 	pull_request.PullRequestActions,
+	pull_request.ViewPullRequestCommitsAndFiles,
 	reflog.Checkout,
 	reflog.CherryPick,
 	reflog.DoNotShowBranchMarkersInReflogSubcommits,

@@ -49,3 +49,31 @@ func (pr *GithubPullRequest) BranchName() string {
 type GithubRepositoryOwner struct {
 	Login string `json:"login"`
 }
+
+// PullRequestHead is the head commit of a pull request as a ref whose parent is
+// the commit where the pull request branched off its base branch, so that
+// diffing it against its parent shows the pull request's changes.
+type PullRequestHead struct {
+	PullRequest  *GithubPullRequest
+	MergeBaseOid string
+}
+
+func (self *PullRequestHead) FullRefName() string {
+	return self.PullRequest.HeadRefOid
+}
+
+func (self *PullRequestHead) RefName() string {
+	return self.PullRequest.HeadRefOid
+}
+
+func (self *PullRequestHead) ShortRefName() string {
+	return "#" + strconv.Itoa(self.PullRequest.Number)
+}
+
+func (self *PullRequestHead) ParentRefName() string {
+	return self.MergeBaseOid
+}
+
+func (self *PullRequestHead) Description() string {
+	return self.PullRequest.Description()
+}

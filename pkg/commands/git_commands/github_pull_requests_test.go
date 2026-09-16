@@ -194,3 +194,41 @@ func TestPullRequestCommands(t *testing.T) {
 		})
 	}
 }
+
+func TestFetchPullRequest(t *testing.T) {
+	runner := oscommands.NewFakeRunner(t).ExpectGitArgs(
+		[]string{"fetch", "--no-tags", "--no-write-fetch-head", "upstream", "refs/pull/12/head", "refs/heads/main"}, "", nil)
+	instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+	assert.NoError(t, instance.FetchPullRequest(nil, "upstream", 12, "main"))
+	runner.CheckForMissingCalls()
+}
+
+func TestHasCommits(t *testing.T) {
+	cases := []struct {
+		name     string
+		output   string
+		expected bool
+	}{
+		{
+			name:     "all present",
+			output:   "abc commit 200\ndef commit 210\n",
+			expected: true,
+		},
+		{
+			name:     "one missing",
+			output:   "abc commit 200\ndef^{commit} missing\n",
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			runner := oscommands.NewFakeRunner(t).ExpectGitArgs([]string{"cat-file", "--batch-check"}, c.output, nil)
+			instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+			assert.Equal(t, c.expected, instance.HasCommits("abc", "def"))
+			runner.CheckForMissingCalls()
+		})
+	}
+}
