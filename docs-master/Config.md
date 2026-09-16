@@ -846,6 +846,7 @@ keybinding:
     viewFiles: F
     edit: e
     guide: g
+    guideSettings: s
   commitMessage:
     commitMenu: <ctrl+o>
 ```

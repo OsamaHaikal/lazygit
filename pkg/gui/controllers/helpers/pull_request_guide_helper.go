@@ -17,6 +17,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
+	"github.com/samber/lo"
 )
 
 // How many of the things the AI says it's doing are shown while it writes a
@@ -70,7 +71,7 @@ func (self *PullRequestsHelper) writeGuide(pr *models.GithubPullRequest, head *m
 	listState.Guides[pr.Number] = state
 
 	repo := *listState.Repo
-	guideConfig := self.c.UserConfig().Git.PullRequestGuide
+	guideConfig := self.GuideSettings()
 	generation := self.c.State().GetRepoGeneration()
 	git := self.c.Git()
 
@@ -236,4 +237,75 @@ func saveCachedGuide(path string, guide *git_commands.PullRequestGuide) error {
 		return err
 	}
 	return os.WriteFile(path, content, 0o644)
+}
+
+// GuideSettings returns the provider and model to write guides with: the ones
+// chosen in the guide settings menu, or else the ones in the user config.
+func (self *PullRequestsHelper) GuideSettings() config.PullRequestGuideConfig {
+	settings := self.c.UserConfig().Git.PullRequestGuide
+	appState := self.c.GetAppState()
+	if appState.PullRequestGuideProvider != "" {
+		settings.Provider = appState.PullRequestGuideProvider
+	}
+	if appState.PullRequestGuideModel != nil {
+		settings.Model = *appState.PullRequestGuideModel
+	}
+	return settings
+}
+
+// OpenGuideSettingsMenu lets the user choose the provider and model to write
+// guides with.
+func (self *PullRequestsHelper) OpenGuideSettingsMenu() error {
+	settings := self.GuideSettings()
+
+	providerItem := func(provider string, label string) *types.MenuItem {
+		return &types.MenuItem{
+			Label:  label,
+			Widget: types.MakeMenuRadioButton(settings.Provider == provider),
+			OnPress: func() error {
+				self.c.GetAppState().PullRequestGuideProvider = provider
+				self.saveGuideSettings()
+				return nil
+			},
+		}
+	}
+
+	model := lo.CoalesceOrEmpty(settings.Model, self.c.Tr.GuideDefaultModel)
+	return self.c.Menu(types.CreateMenuOptions{
+		Title: self.c.Tr.PullRequestGuideSettings,
+		Items: []*types.MenuItem{
+			providerItem(git_commands.GuideProviderAuto, self.c.Tr.GuideProviderAuto),
+			providerItem(git_commands.GuideProviderCodex, self.c.Tr.GuideProviderCodex),
+			providerItem(git_commands.GuideProviderClaude, self.c.Tr.GuideProviderClaude),
+			{
+				Label: utils.ResolvePlaceholderString(self.c.Tr.GuideModel, map[string]string{"model": model}),
+				OnPress: func() error {
+					self.c.Prompt(types.PromptOpts{
+						Title:          self.c.Tr.GuideModelPromptTitle,
+						InitialContent: settings.Model,
+						// Claude Code's aliases for its latest models; Codex's
+						// models change too often to list them here
+						FindSuggestionsFunc: FilterFunc([]string{"opus", "sonnet", "haiku", "fable"}, false),
+						AllowEmptyInput:     true,
+						HandleConfirm: func(model string) error {
+							self.c.GetAppState().PullRequestGuideModel = &model
+							self.saveGuideSettings()
+							return nil
+						},
+					})
+					return nil
+				},
+			},
+		},
+	})
+}
+
+func (self *PullRequestsHelper) saveGuideSettings() {
+	self.c.SaveAppStateAndLogError()
+
+	settings := self.GuideSettings()
+	self.c.Toast(utils.ResolvePlaceholderString(self.c.Tr.GuideSettingsChanged, map[string]string{
+		"provider": settings.Provider,
+		"model":    lo.CoalesceOrEmpty(settings.Model, self.c.Tr.GuideDefaultModel),
+	}))
 }

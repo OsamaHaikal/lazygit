@@ -691,6 +691,7 @@ type KeybindingPullRequestsConfig struct {
 	ViewFiles     Keybinding `yaml:"viewFiles"`
 	Edit          Keybinding `yaml:"edit"`
 	Guide         Keybinding `yaml:"guide"`
+	GuideSettings Keybinding `yaml:"guideSettings"`
 }
 
 type KeybindingCommitMessageConfig struct {
@@ -1214,6 +1215,7 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 				ViewFiles:     Keybinding{"F"},
 				Edit:          Keybinding{"e"},
 				Guide:         Keybinding{"g"},
+				GuideSettings: Keybinding{"s"},
 			},
 			CommitMessage: KeybindingCommitMessageConfig{
 				CommitMenu: Keybinding{"<ctrl+o>"},

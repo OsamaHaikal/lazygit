@@ -55,6 +55,13 @@ func (self *PullRequestGuideController) GetKeybindings(opts types.KeybindingsOpt
 			Tooltip:           self.c.Tr.ViewPullRequestFilesTooltip,
 		},
 		{
+			Keys:        opts.GetKeys(opts.Config.PullRequests.GuideSettings),
+			Handler:     self.c.Helpers().PullRequests.OpenGuideSettingsMenu,
+			Description: self.c.Tr.PullRequestGuideSettings,
+			Tooltip:     self.c.Tr.PullRequestGuideSettingsTooltip,
+			OpensMenu:   true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.Universal.Remove),
 			Handler:           self.cancel,
 			GetDisabledReason: self.whileWriting,
@@ -98,7 +105,7 @@ func (self *PullRequestGuideController) mainViewContent() string {
 		})
 	case state.Guide == nil:
 		return utils.ResolvePlaceholderString(self.c.Tr.WritingPullRequestGuide, map[string]string{
-			"provider": lo.CoalesceOrEmpty(state.Provider, self.c.UserConfig().Git.PullRequestGuide.Provider),
+			"provider": lo.CoalesceOrEmpty(state.Provider, self.c.Helpers().PullRequests.GuideSettings().Provider),
 			"number":   number,
 			"elapsed":  presentation.FormatElapsed(time.Since(state.StartedAt)),
 		}) + presentation.FormatGuideProgress(state.Progress)

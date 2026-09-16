@@ -55,6 +55,13 @@ func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) [
 			DisplayOnScreen:   true,
 		},
 		{
+			Keys:        opts.GetKeys(opts.Config.PullRequests.GuideSettings),
+			Handler:     self.c.Helpers().PullRequests.OpenGuideSettingsMenu,
+			Description: self.c.Tr.PullRequestGuideSettings,
+			Tooltip:     self.c.Tr.PullRequestGuideSettingsTooltip,
+			OpensMenu:   true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.PullRequests.ViewFiles),
 			Handler:           self.withItem(self.viewFiles),
 			GetDisabledReason: self.require(self.singleItemSelected()),

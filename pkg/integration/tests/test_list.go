@@ -417,6 +417,7 @@ var tests = []*components.IntegrationTest{
 	pull_request.ListPullRequests,
 	pull_request.PullRequestActions,
 	pull_request.PullRequestGuide,
+	pull_request.PullRequestGuideSettings,
 	pull_request.ViewPullRequestCommitsAndFiles,
 	reflog.Checkout,
 	reflog.CherryPick,

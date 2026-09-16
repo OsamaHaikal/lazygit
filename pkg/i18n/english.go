@@ -465,6 +465,15 @@ type TranslationSet struct {
 	PullRequestGuideNotBeingWritten       string
 	GuideHunkAlsoExplainedIn              string
 	PullRequestChangedSinceGuide          string
+	PullRequestGuideSettings              string
+	PullRequestGuideSettingsTooltip       string
+	GuideProviderAuto                     string
+	GuideProviderCodex                    string
+	GuideProviderClaude                   string
+	GuideModel                            string
+	GuideDefaultModel                     string
+	GuideModelPromptTitle                 string
+	GuideSettingsChanged                  string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1740,6 +1749,15 @@ func EnglishTranslationSet() *TranslationSet {
 		PullRequestGuideNotBeingWritten:      "The guide isn't being written",
 		GuideHunkAlsoExplainedIn:             "Also explained in {{.chapters}}",
 		PullRequestChangedSinceGuide:         "The pull request has changed since this guide was written. Press {{.key}} to write it again.",
+		PullRequestGuideSettings:             "AI guide settings",
+		PullRequestGuideSettingsTooltip:      "Choose which AI writes pull request guides, and with which model. Remembered across sessions; takes precedence over git.pullRequestGuide in the config.",
+		GuideProviderAuto:                    "Auto (Codex if installed, else Claude Code)",
+		GuideProviderCodex:                   "Codex",
+		GuideProviderClaude:                  "Claude Code",
+		GuideModel:                           "Model: {{.model}}",
+		GuideDefaultModel:                    "the AI's default",
+		GuideModelPromptTitle:                "Model (leave empty for the AI's default)",
+		GuideSettingsChanged:                 "New guides will be written by {{.provider}} ({{.model}})",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

@@ -856,6 +856,12 @@ type AppState struct {
 	ShellCommandsHistory []string `yaml:"customcommandshistory"`
 
 	HideCommandLog bool
+
+	// The provider and model chosen for writing pull request guides, taking
+	// precedence over the ones in the user config; empty and nil respectively
+	// when none has been chosen
+	PullRequestGuideProvider string
+	PullRequestGuideModel    *string
 }
 
 func getDefaultAppState() *AppState {

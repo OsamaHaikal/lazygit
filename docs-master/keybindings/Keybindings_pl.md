@@ -139,6 +139,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` 0 `` | Focus main view |  |
 | `` <enter> `` | View chapter files | Show the files of this chapter, to go through their diffs and comment on their lines. |
 | `` F `` | View files changed | Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab. |
+| `` s `` | AI guide settings | Choose which AI writes pull request guides, and with which model. Remembered across sessions; takes precedence over git.pullRequestGuide in the config. |
 | `` d `` | Stop writing guide |  |
 | `` R `` | Rewrite guide |  |
 
@@ -327,6 +328,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 |-----|--------|-------------|
 | `` <enter> `` | View commits |  |
 | `` g `` | AI guide | Show an AI-written walkthrough of the pull request's changes: chapters that each explain a logical part of the change, with the hunks that make it up. Written by Codex or Claude Code (see git.pullRequestGuide in the config); the pull request's description and diff are sent to it. |
+| `` s `` | AI guide settings | Choose which AI writes pull request guides, and with which model. Remembered across sessions; takes precedence over git.pullRequestGuide in the config. |
 | `` F `` | View files changed | Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab. |
 | `` <space> `` | Przełącz | Check out the pull request's branch locally, creating it if needed (gh pr checkout). |
 | `` M `` | Merge pull request | Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass. |
