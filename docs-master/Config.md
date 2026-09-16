@@ -830,6 +830,7 @@ keybinding:
     comment: c
     toggleDraft: r
     closeOrReopen: d
+    filter: f
   commitMessage:
     commitMenu: <ctrl+o>
 ```

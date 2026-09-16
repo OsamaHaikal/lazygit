@@ -678,6 +678,7 @@ type KeybindingPullRequestsConfig struct {
 	Comment       Keybinding `yaml:"comment"`
 	ToggleDraft   Keybinding `yaml:"toggleDraft"`
 	CloseOrReopen Keybinding `yaml:"closeOrReopen"`
+	Filter        Keybinding `yaml:"filter"`
 }
 
 type KeybindingCommitMessageConfig struct {
@@ -1194,6 +1195,7 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 				Comment:       Keybinding{"c"},
 				ToggleDraft:   Keybinding{"r"},
 				CloseOrReopen: Keybinding{"d"},
+				Filter:        Keybinding{"f"},
 			},
 			CommitMessage: KeybindingCommitMessageConfig{
 				CommitMenu: Keybinding{"<ctrl+o>"},

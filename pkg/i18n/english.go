@@ -408,6 +408,15 @@ type TranslationSet struct {
 	CommentOnPullRequestTitle             string
 	PostingComment                        string
 	AddPullRequestComment                 string
+	FilterPullRequests                    string
+	FilterPullRequestsTooltip             string
+	PullRequestFilterOpen                 string
+	PullRequestFilterReviewRequested      string
+	PullRequestFilterMine                 string
+	PullRequestFilterAssigned             string
+	PullRequestFilterMerged               string
+	PullRequestFilterClosed               string
+	PullRequestFilterAll                  string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1624,6 +1633,15 @@ func EnglishTranslationSet() *TranslationSet {
 		CommentOnPullRequestTitle:            "Comment on #{{.number}}",
 		PostingComment:                       "Posting comment",
 		AddPullRequestComment:                "Add comment",
+		FilterPullRequests:                   "Filter pull requests",
+		FilterPullRequestsTooltip:            "Choose which pull requests to list: all open ones, the ones waiting for your review, yours, merged or closed ones, or all of them.",
+		PullRequestFilterOpen:                "Open",
+		PullRequestFilterReviewRequested:     "Review requested from me",
+		PullRequestFilterMine:                "Created by me",
+		PullRequestFilterAssigned:            "Assigned to me",
+		PullRequestFilterMerged:              "Merged",
+		PullRequestFilterClosed:              "Closed",
+		PullRequestFilterAll:                 "All",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

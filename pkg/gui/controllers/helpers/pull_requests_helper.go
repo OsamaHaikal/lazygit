@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jesseduffield/lazygit/pkg/commands"
@@ -110,8 +111,60 @@ func (self *PullRequestsHelper) loadPullRequestList(git *commands.GitCommand, fi
 	return &baseRemote.serviceInfo, prs, nil
 }
 
+// SetFilter switches the pull request list to the given filter and loads it.
+func (self *PullRequestsHelper) SetFilter(filter git_commands.PullRequestFilter) {
+	self.c.Model().PullRequestListState.Filter = filter
+	self.c.Model().PullRequestList = nil
+	self.c.Contexts().PullRequests.SetSelection(0)
+	self.Load()
+}
+
+var PullRequestFilters = []git_commands.PullRequestFilter{
+	git_commands.PullRequestFilterOpen,
+	git_commands.PullRequestFilterReviewRequested,
+	git_commands.PullRequestFilterMine,
+	git_commands.PullRequestFilterAssigned,
+	git_commands.PullRequestFilterMerged,
+	git_commands.PullRequestFilterClosed,
+	git_commands.PullRequestFilterAll,
+}
+
+func (self *PullRequestsHelper) FilterLabel(filter git_commands.PullRequestFilter) string {
+	switch filter {
+	case git_commands.PullRequestFilterOpen:
+		return self.c.Tr.PullRequestFilterOpen
+	case git_commands.PullRequestFilterReviewRequested:
+		return self.c.Tr.PullRequestFilterReviewRequested
+	case git_commands.PullRequestFilterMine:
+		return self.c.Tr.PullRequestFilterMine
+	case git_commands.PullRequestFilterAssigned:
+		return self.c.Tr.PullRequestFilterAssigned
+	case git_commands.PullRequestFilterMerged:
+		return self.c.Tr.PullRequestFilterMerged
+	case git_commands.PullRequestFilterClosed:
+		return self.c.Tr.PullRequestFilterClosed
+	case git_commands.PullRequestFilterAll:
+		return self.c.Tr.PullRequestFilterAll
+	}
+
+	panic(fmt.Sprintf("Unexpected pull request filter: %d", filter))
+}
+
+// subtitle shows which filter is active, unless it's the default one; a
+// subtitle is squeezed in next to the panel's tabs, which already take up most
+// of the space there.
+func (self *PullRequestsHelper) subtitle() string {
+	filter := self.c.Model().PullRequestListState.Filter
+	if filter == git_commands.PullRequestFilterOpen {
+		return ""
+	}
+
+	return self.FilterLabel(filter)
+}
+
 func (self *PullRequestsHelper) rerender() {
 	context := self.c.Contexts().PullRequests
+	context.GetView().Subtitle = self.subtitle()
 	self.searchHelper.ReApplyFilter(context)
 	self.c.PostRefreshUpdate(context)
 }

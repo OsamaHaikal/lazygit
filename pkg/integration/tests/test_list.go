@@ -410,6 +410,7 @@ var tests = []*components.IntegrationTest{
 	patch_building.StartNewPatch,
 	patch_building.ToggleDirectory,
 	patch_building.ToggleRange,
+	pull_request.FilterPullRequests,
 	pull_request.ListPullRequests,
 	pull_request.PullRequestActions,
 	reflog.Checkout,

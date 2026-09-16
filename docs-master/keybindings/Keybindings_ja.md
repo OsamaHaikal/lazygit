@@ -71,6 +71,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` d `` | Close/reopen pull request |  |
 | `` G `` | Open pull request in browser |  |
 | `` <ctrl+y> `` | プルリクエストURLをクリップボードにコピー |  |
+| `` f `` | Filter pull requests | Choose which pull requests to list: all open ones, the ones waiting for your review, yours, merged or closed ones, or all of them. |
 | `` R `` | Refresh pull requests |  |
 | `` / `` | 現在のビューをテキストでフィルタリング |  |
 

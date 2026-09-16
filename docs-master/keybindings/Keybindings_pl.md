@@ -322,6 +322,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` d `` | Close/reopen pull request |  |
 | `` G `` | Otwórz żądanie ściągnięcia w przeglądarce |  |
 | `` <ctrl+y> `` | Kopiuj adres URL żądania ściągnięcia do schowka |  |
+| `` f `` | Filter pull requests | Choose which pull requests to list: all open ones, the ones waiting for your review, yours, merged or closed ones, or all of them. |
 | `` R `` | Refresh pull requests |  |
 | `` / `` | Filtruj bieżący widok po tekście |  |
 

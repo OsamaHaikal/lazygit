@@ -8,7 +8,8 @@ import (
 // The pull requests panel talks to GitHub through gh, so the tests put a fake
 // gh in its place. It answers the GraphQL query with pullRequestsJson, prints a
 // placeholder for `gh pr view`, and appends the arguments of every other
-// invocation to gh-calls.txt in the repo so tests can check what was run.
+// invocation to gh-calls.txt in the repo so tests can check what was run. The
+// search query of each GraphQL request goes to gh-searches.txt.
 //
 // The remote lives on a host under .invalid (configured as a GitHub instance)
 // so that the pull request lookups the branches panel does over HTTP fail
@@ -70,6 +71,8 @@ case "$1 $2" in
     echo fake-token
     ;;
 "api graphql")
+    for last; do :; done
+    echo "$last" >> gh-searches.txt
     cat "$(dirname "$0")/pull_requests.json"
     ;;
 "pr view")

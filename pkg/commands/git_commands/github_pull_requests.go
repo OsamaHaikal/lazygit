@@ -22,6 +22,7 @@ const (
 	PullRequestFilterOpen PullRequestFilter = iota
 	PullRequestFilterMine
 	PullRequestFilterReviewRequested
+	PullRequestFilterAssigned
 	PullRequestFilterMerged
 	PullRequestFilterClosed
 	PullRequestFilterAll
@@ -69,6 +70,8 @@ func pullRequestSearchQuery(repo hosting_service.ServiceInfo, filter PullRequest
 		qualifiers = "is:open author:@me"
 	case PullRequestFilterReviewRequested:
 		qualifiers = "is:open review-requested:@me"
+	case PullRequestFilterAssigned:
+		qualifiers = "is:open assignee:@me"
 	case PullRequestFilterMerged:
 		qualifiers = "is:merged"
 	case PullRequestFilterClosed:

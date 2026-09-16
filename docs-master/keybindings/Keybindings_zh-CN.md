@@ -64,6 +64,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` d `` | Close/reopen pull request |  |
 | `` G `` | 在浏览器中打开拉取请求 |  |
 | `` <ctrl+y> `` | 复制拉取请求 URL 到剪贴板 |  |
+| `` f `` | Filter pull requests | Choose which pull requests to list: all open ones, the ones waiting for your review, yours, merged or closed ones, or all of them. |
 | `` R `` | Refresh pull requests |  |
 | `` / `` | 通过文本过滤当前视图 |  |
 

@@ -8,8 +8,10 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
+	"github.com/samber/lo"
 )
 
 type PullRequestsController struct {
@@ -93,6 +95,14 @@ func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) [
 			Handler:           self.withItem(self.copyURL),
 			GetDisabledReason: self.require(self.singleItemSelected()),
 			Description:       self.c.Tr.CopyPullRequestURL,
+		},
+		{
+			Keys:            opts.GetKeys(opts.Config.PullRequests.Filter),
+			Handler:         self.filter,
+			Description:     self.c.Tr.FilterPullRequests,
+			Tooltip:         self.c.Tr.FilterPullRequestsTooltip,
+			OpensMenu:       true,
+			DisplayOnScreen: true,
 		},
 		{
 			Keys:        opts.GetKeys(opts.Config.Universal.Refresh),
@@ -294,6 +304,25 @@ func (self *PullRequestsController) copyURL(pr *models.GithubPullRequest) error 
 
 	self.c.Toast(self.c.Tr.PullRequestURLCopiedToClipboard)
 	return nil
+}
+
+func (self *PullRequestsController) filter() error {
+	helper := self.c.Helpers().PullRequests
+	currentFilter := self.c.Model().PullRequestListState.Filter
+
+	return self.c.Menu(types.CreateMenuOptions{
+		Title: self.c.Tr.FilterPullRequests,
+		Items: lo.Map(helpers.PullRequestFilters, func(filter git_commands.PullRequestFilter, _ int) *types.MenuItem {
+			return &types.MenuItem{
+				Label:  helper.FilterLabel(filter),
+				Widget: types.MakeMenuRadioButton(filter == currentFilter),
+				OnPress: func() error {
+					helper.SetFilter(filter)
+					return nil
+				},
+			}
+		}),
+	})
 }
 
 func (self *PullRequestsController) refresh() error {

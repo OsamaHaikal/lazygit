@@ -262,6 +262,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` d `` | Close/reopen pull request |  |
 | `` G `` | Open pull request in browser |  |
 | `` <ctrl+y> `` | Kopieer de URL van het pull-verzoek naar het klembord |  |
+| `` f `` | Filter pull requests | Choose which pull requests to list: all open ones, the ones waiting for your review, yours, merged or closed ones, or all of them. |
 | `` R `` | Refresh pull requests |  |
 | `` / `` | Filter the current view by text |  |
 

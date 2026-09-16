@@ -26,6 +26,7 @@ func TestPullRequestSearchQuery(t *testing.T) {
 		{PullRequestFilterOpen, "repo:jesseduffield/lazygit is:pr is:open sort:updated-desc"},
 		{PullRequestFilterMine, "repo:jesseduffield/lazygit is:pr is:open author:@me sort:updated-desc"},
 		{PullRequestFilterReviewRequested, "repo:jesseduffield/lazygit is:pr is:open review-requested:@me sort:updated-desc"},
+		{PullRequestFilterAssigned, "repo:jesseduffield/lazygit is:pr is:open assignee:@me sort:updated-desc"},
 		{PullRequestFilterMerged, "repo:jesseduffield/lazygit is:pr is:merged sort:updated-desc"},
 		{PullRequestFilterClosed, "repo:jesseduffield/lazygit is:pr is:closed is:unmerged sort:updated-desc"},
 		{PullRequestFilterAll, "repo:jesseduffield/lazygit is:pr sort:updated-desc"},
