@@ -6,7 +6,7 @@ import (
 )
 
 var PullRequestActions = NewIntegrationTest(NewIntegrationTestArgs{
-	Description:  "Comment on, review, merge, and close pull requests through gh",
+	Description:  "Comment on (mentioning someone), review, merge, and close pull requests through gh",
 	ExtraCmdArgs: []string{},
 	ExtraEnvVars: ghExtraEnvVars,
 	Skip:         false,
@@ -23,7 +23,22 @@ var PullRequestActions = NewIntegrationTest(NewIntegrationTestArgs{
 			Tap(func() {
 				t.ExpectPopup().Prompt().
 					Title(Equals("Comment on #12")).
-					Type("Nice work").
+					Type("Thanks @").
+					SuggestionLines(
+						Equals("@alice"),
+						Equals("@bob"),
+						Equals("@carol"),
+					).
+					Type("ca").
+					SuggestionLines(
+						Equals("@carol"),
+					).
+					ConfirmFirstSuggestion()
+
+				t.ExpectPopup().Prompt().
+					Title(Equals("Comment on #12")).
+					InitialText(Equals("Thanks @carol ")).
+					Type("for the review").
 					Confirm()
 			}).
 			Press(keys.PullRequests.Review).
@@ -56,7 +71,7 @@ var PullRequestActions = NewIntegrationTest(NewIntegrationTestArgs{
 			})
 
 		t.FileSystem().FileContent("gh-calls.txt", Equals(
-			"pr comment 12 --repo github.invalid/owner/repo --body Nice work\n"+
+			"pr comment 12 --repo github.invalid/owner/repo --body Thanks @carol for the review\n"+
 				"pr review 12 --repo github.invalid/owner/repo --request-changes --body Please add tests\n"+
 				"pr merge 12 --repo github.invalid/owner/repo --squash\n"+
 				"pr ready 11 --repo github.invalid/owner/repo\n"+

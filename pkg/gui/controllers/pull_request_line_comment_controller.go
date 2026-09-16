@@ -73,6 +73,8 @@ func (self *PullRequestLineCommentController) comment() error {
 	self.c.Prompt(types.PromptOpts{
 		Title: utils.ResolvePlaceholderString(self.c.Tr.CommentOnPullRequestLinesTitle,
 			map[string]string{"path": path, "lines": lines}),
+		FindSuggestionsFunc:      self.c.Helpers().PullRequests.MentionSuggestionsFunc(),
+		SuggestionsCompleteInput: true,
 		HandleConfirm: func(body string) error {
 			return self.c.WithWaitingStatus(self.c.Tr.PostingComment, func(gocui.Task) error {
 				self.c.LogAction(self.c.Tr.Actions.CommentOnPullRequestLines)

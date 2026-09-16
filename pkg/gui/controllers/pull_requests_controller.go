@@ -311,8 +311,10 @@ func (self *PullRequestsController) review(pr *models.GithubPullRequest) error {
 			Label: label,
 			OnPress: func() error {
 				self.c.Prompt(types.PromptOpts{
-					Title:           self.resolvePlaceholders(bodyTitle, pr),
-					AllowEmptyInput: !bodyRequired,
+					Title:                    self.resolvePlaceholders(bodyTitle, pr),
+					AllowEmptyInput:          !bodyRequired,
+					FindSuggestionsFunc:      self.c.Helpers().PullRequests.MentionSuggestionsFunc(),
+					SuggestionsCompleteInput: true,
 					HandleConfirm: func(body string) error {
 						return self.runAction(self.c.Tr.Actions.ReviewPullRequest, self.c.Tr.SubmittingReview,
 							func(repo hosting_service.ServiceInfo) error {
@@ -337,7 +339,9 @@ func (self *PullRequestsController) review(pr *models.GithubPullRequest) error {
 
 func (self *PullRequestsController) comment(pr *models.GithubPullRequest) error {
 	self.c.Prompt(types.PromptOpts{
-		Title: self.resolvePlaceholders(self.c.Tr.CommentOnPullRequestTitle, pr),
+		Title:                    self.resolvePlaceholders(self.c.Tr.CommentOnPullRequestTitle, pr),
+		FindSuggestionsFunc:      self.c.Helpers().PullRequests.MentionSuggestionsFunc(),
+		SuggestionsCompleteInput: true,
 		HandleConfirm: func(body string) error {
 			return self.runAction(self.c.Tr.Actions.CommentOnPullRequest, self.c.Tr.PostingComment,
 				func(repo hosting_service.ServiceInfo) error {

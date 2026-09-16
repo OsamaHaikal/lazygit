@@ -19,8 +19,9 @@ import (
 const pullRequestListMaxAge = time.Minute
 
 type PullRequestsHelper struct {
-	c            *HelperCommon
-	searchHelper *SearchHelper
+	c                *HelperCommon
+	searchHelper     *SearchHelper
+	mentionableUsers mentionableUsers
 }
 
 func NewPullRequestsHelper(c *HelperCommon, searchHelper *SearchHelper) *PullRequestsHelper {
