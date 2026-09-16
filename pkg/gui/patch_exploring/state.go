@@ -141,6 +141,18 @@ func (s *State) OnViewWidthChanged(view *gocui.View) {
 	}
 }
 
+// SelectFileLine selects the line of the patch that shows the given line of the
+// file, if there is one, and reports whether there was.
+func (s *State) SelectFileLine(fileLine patch.FileLine) bool {
+	patchLineIdx, ok := s.patch.LineIdxOfFileLine(fileLine)
+	if !ok {
+		return false
+	}
+
+	s.selectedLineIdx = s.viewLineIndices[patchLineIdx]
+	return true
+}
+
 func (s *State) GetSelectedPatchLineIdx() int {
 	return s.patchLineIndices[s.selectedLineIdx]
 }

@@ -97,6 +97,13 @@ func (self *PatchBuildingHelper) RefreshPatchBuildingPanel(opts types.OnFocusOpt
 		return
 	}
 
+	// Going into the file, rather than refreshing it or clicking a line
+	if oldState == nil && selectedLineIdx == -1 {
+		if line, ok := self.c.Contexts().CommitFiles.GetLineToSelect(file.Path); ok {
+			state.SelectFileLine(line)
+		}
+	}
+
 	mainContent := context.GetContentToRender()
 
 	self.c.Contexts().CustomPatchBuilder.FocusSelection()

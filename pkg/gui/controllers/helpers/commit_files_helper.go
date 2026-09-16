@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/commands/patch"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
@@ -29,6 +30,9 @@ type ViewCommitFilesOpts struct {
 	Paths []string
 	// What to show the files of in the view's title, instead of the ref
 	TitleRef string
+	// The line to select first when going into the diff of the file at a path,
+	// instead of its first change
+	LinesToSelect map[string]patch.FileLine
 }
 
 // ViewCommitFiles shows the files changed by a ref (or by a range of refs) in
@@ -38,6 +42,7 @@ func (self *CommitFilesHelper) ViewCommitFiles(opts ViewCommitFilesOpts) {
 
 	commitFilesContext.ClearFilter()
 	commitFilesContext.ReInitForPaths(opts.Ref, opts.RefRange, opts.Paths)
+	commitFilesContext.SetLinesToSelect(opts.LinesToSelect)
 	if opts.TitleRef != "" {
 		commitFilesContext.SetTitleRef(opts.TitleRef)
 		commitFilesContext.GetView().Title = commitFilesContext.Title()

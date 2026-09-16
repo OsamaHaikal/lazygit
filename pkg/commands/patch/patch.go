@@ -145,6 +145,17 @@ func (self *Patch) FileLineOfLine(idx int) (fileLine FileLine, ok bool) {
 	return FileLine{Number: hunk.newStart + nLinesWithKind(precedingLines, []PatchLineKind{ADDITION, CONTEXT})}, true
 }
 
+// LineIdxOfFileLine returns the index of the line in the patch that shows the
+// given line of the file, if the patch shows it.
+func (self *Patch) LineIdxOfFileLine(fileLine FileLine) (int, bool) {
+	for idx := range self.LineCount() {
+		if line, ok := self.FileLineOfLine(idx); ok && line == fileLine {
+			return idx, true
+		}
+	}
+	return 0, false
+}
+
 // Returns hunk index containing the line at the given patch line index
 func (self *Patch) HunkContainingLine(idx int) int {
 	for hunkIdx, hunk := range self.hunks {

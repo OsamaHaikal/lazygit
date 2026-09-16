@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/commands/patch"
 	"github.com/jesseduffield/lazygit/pkg/gui/filetree"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation/icons"
@@ -19,6 +20,9 @@ type CommitFilesContext struct {
 
 	// If not empty, only the files at these paths are shown
 	paths []string
+	// The line to select first when going into the diff of the file at a path,
+	// instead of its first change
+	linesToSelect map[string]patch.FileLine
 }
 
 var (
@@ -94,6 +98,17 @@ func (self *CommitFilesContext) GetPaths() []string {
 	return self.paths
 }
 
+func (self *CommitFilesContext) SetLinesToSelect(linesToSelect map[string]patch.FileLine) {
+	self.linesToSelect = linesToSelect
+}
+
+// GetLineToSelect returns the line to select first when going into the diff
+// of the file at the given path, if there is one.
+func (self *CommitFilesContext) GetLineToSelect(path string) (patch.FileLine, bool) {
+	line, ok := self.linesToSelect[path]
+	return line, ok
+}
+
 func (self *CommitFilesContext) ReInit(ref models.Ref, refRange *types.RefRange) {
 	self.ReInitForPaths(ref, refRange, nil)
 }
@@ -104,6 +119,7 @@ func (self *CommitFilesContext) ReInitForPaths(ref models.Ref, refRange *types.R
 	self.SetRef(ref)
 	self.SetRefRange(refRange)
 	self.paths = paths
+	self.linesToSelect = nil
 	if refRange != nil {
 		self.SetTitleRef(fmt.Sprintf("%s-%s", refRange.From.ShortRefName(), refRange.To.ShortRefName()))
 	} else {

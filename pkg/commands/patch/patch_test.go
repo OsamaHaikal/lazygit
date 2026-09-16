@@ -710,6 +710,21 @@ func TestFileLineOfLine(t *testing.T) {
 	}
 }
 
+func TestLineIdxOfFileLine(t *testing.T) {
+	patch := Parse(twoHunks)
+
+	idx, ok := patch.LineIdxOfFileLine(FileLine{Number: 2, IsOld: true})
+	assert.True(t, ok)
+	assert.Equal(t, 6, idx)
+
+	idx, ok = patch.LineIdxOfFileLine(FileLine{Number: 12})
+	assert.True(t, ok)
+	assert.Equal(t, 16, idx)
+
+	_, ok = patch.LineIdxOfFileLine(FileLine{Number: 5, IsOld: true})
+	assert.False(t, ok)
+}
+
 func TestGetNextStageableLineIndex(t *testing.T) {
 	type scenario struct {
 		testName  string
