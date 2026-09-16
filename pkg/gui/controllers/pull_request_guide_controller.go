@@ -115,7 +115,7 @@ func (self *PullRequestGuideController) mainViewContent() string {
 			map[string]string{"provider": state.Guide.Provider, "model": state.Guide.Model})
 	}
 
-	return presentation.FormatPullRequestGuideChapter(state.Guide, chapter, writtenBy)
+	return presentation.FormatPullRequestGuideChapter(state.Guide, chapter, writtenBy, self.c.Tr)
 }
 
 func (self *PullRequestGuideController) GetOnDoubleClick() func() error {

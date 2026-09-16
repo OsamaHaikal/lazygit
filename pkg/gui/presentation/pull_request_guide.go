@@ -8,14 +8,22 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
+	"github.com/jesseduffield/lazygit/pkg/i18n"
+	"github.com/jesseduffield/lazygit/pkg/utils"
 	"github.com/samber/lo"
 )
 
 var inlineCodeRegex = regexp.MustCompile("`([^`\n]+)`")
 
 // FormatPullRequestGuideChapter renders a chapter of a pull request guide: its
-// explanation, followed by the hunks it's about, grouped by file.
-func FormatPullRequestGuideChapter(guide *git_commands.PullRequestGuide, chapter *git_commands.GuideChapter, writtenBy string) string {
+// explanation, followed by the hunks it's about, grouped by file, each saying
+// which other chapters explain it too.
+func FormatPullRequestGuideChapter(
+	guide *git_commands.PullRequestGuide,
+	chapter *git_commands.GuideChapter,
+	writtenBy string,
+	tr *i18n.TranslationSet,
+) string {
 	var builder strings.Builder
 
 	builder.WriteString(style.FgYellow.SetBold().Sprint(chapter.Title) + "\n")
@@ -39,6 +47,15 @@ func FormatPullRequestGuideChapter(guide *git_commands.PullRequestGuide, chapter
 		builder.WriteString(strings.Join(lo.Map(strings.Split(unit.Diff, "\n"), func(line string, _ int) string {
 			return guideDiffLineStyle(line).Sprint(line)
 		}), "\n") + "\n")
+
+		otherChapters := lo.FilterMap(guide.Chapters, func(other git_commands.GuideChapter, i int) (string, bool) {
+			return fmt.Sprintf("%d. %s", i+1, other.Title),
+				other.Title != chapter.Title && lo.Contains(other.UnitIDs, unit.ID)
+		})
+		if len(otherChapters) > 0 {
+			builder.WriteString(style.FgBlue.Sprint("↳ "+utils.ResolvePlaceholderString(tr.GuideHunkAlsoExplainedIn,
+				map[string]string{"chapters": strings.Join(otherChapters, ", ")})) + "\n")
+		}
 	}
 
 	return builder.String()

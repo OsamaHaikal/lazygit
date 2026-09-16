@@ -48,7 +48,7 @@ cat > /dev/null
 echo "$@" | grep -o -- "--model [a-z]*" >> "$(dirname "$0")/claude-calls.txt"
 cat <<'GUIDE'
 {"type": "assistant", "message": {"content": [{"type": "text", "text": "Progress: Grouping the hunks"}]}}
-{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Add the feature", "explanation": "Creates `+"`feature.txt`"+` with the improved feature.", "hunks": ["f2-h0", "f0-h1"]}, {"title": "Document the feature", "explanation": "Explains how to use it.", "hunks": ["f1-h0", "f0-h0"]}]}}
+{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Add the feature", "explanation": "Creates `+"`feature.txt`"+` with the improved feature.", "hunks": ["f2-h0", "f0-h1"]}, {"title": "Document the feature", "explanation": "Explains how to use it.", "hunks": ["f1-h0", "f0-h0", "f0-h1"]}]}}
 GUIDE
 `)
 		shell.MakeExecutable("../bin/claude")
@@ -80,6 +80,7 @@ GUIDE
 				Contains("feature.txt").
 				Contains("+feature, improved").
 				Contains("+line 18 for the feature").
+				Contains("↳ Also explained in 2. Document the feature").
 				DoesNotContain("How to use the feature").
 				DoesNotContain("line 2 for the docs"),
 		)
