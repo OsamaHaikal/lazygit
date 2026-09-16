@@ -179,6 +179,9 @@ type GeneratePullRequestGuideOpts struct {
 	Head        string
 	// Called with short descriptions of what the AI is doing, as it does it
 	OnProgress func(string)
+	// Closing this stops the AI, making GeneratePullRequestGuide return
+	// oscommands.ErrCommandCancelled
+	Cancel <-chan struct{}
 }
 
 // GuideCacheKey returns a key that identifies the guide that generating one
@@ -264,9 +267,9 @@ func (self *GitHubCommands) GeneratePullRequestGuide(opts GeneratePullRequestGui
 	var output string
 	switch opts.Provider {
 	case GuideProviderCodex:
-		output, err = self.runCodexForGuide(workDir, prompt, opts.Model, onProgress)
+		output, err = self.runCodexForGuide(workDir, prompt, opts.Model, onProgress, opts.Cancel)
 	case GuideProviderClaude:
-		output, err = self.runClaudeForGuide(workDir, repoPath, prompt, opts.Model, onProgress)
+		output, err = self.runClaudeForGuide(workDir, repoPath, prompt, opts.Model, onProgress, opts.Cancel)
 	default:
 		return nil, fmt.Errorf("unknown guide provider '%s'", opts.Provider)
 	}
@@ -289,7 +292,7 @@ func (self *GitHubCommands) GeneratePullRequestGuide(opts GeneratePullRequestGui
 	return &guide, nil
 }
 
-func (self *GitHubCommands) runCodexForGuide(workDir string, prompt string, model string, onProgress func(string)) (string, error) {
+func (self *GitHubCommands) runCodexForGuide(workDir string, prompt string, model string, onProgress func(string), cancel <-chan struct{}) (string, error) {
 	schemaPath := filepath.Join(workDir, "schema.json")
 	if err := os.WriteFile(schemaPath, []byte(guideSchema), 0o644); err != nil {
 		return "", err
@@ -314,7 +317,7 @@ func (self *GitHubCommands) runCodexForGuide(workDir string, prompt string, mode
 	args = append(args, "-")
 
 	output := ""
-	err := self.cmd.New(args).SetWd(workDir).SetStdin(prompt).DontLog().RunAndProcessOutputLines(func(line string) {
+	err := self.cmd.New(args).SetWd(workDir).SetStdin(prompt).SetCancel(cancel).DontLog().RunAndProcessOutputLines(func(line string) {
 		progress, final := parseCodexGuideEvent(line, self.repoPaths.WorktreePath())
 		if progress != "" {
 			onProgress(progress)
@@ -333,7 +336,7 @@ func (self *GitHubCommands) runCodexForGuide(workDir string, prompt string, mode
 	return output, nil
 }
 
-func (self *GitHubCommands) runClaudeForGuide(workDir string, repoPath string, prompt string, model string, onProgress func(string)) (string, error) {
+func (self *GitHubCommands) runClaudeForGuide(workDir string, repoPath string, prompt string, model string, onProgress func(string), cancel <-chan struct{}) (string, error) {
 	gitCommand := func(subcommand string) string {
 		return fmt.Sprintf("Bash(git -C %s %s:*)", repoPath, subcommand)
 	}
@@ -355,7 +358,7 @@ func (self *GitHubCommands) runClaudeForGuide(workDir string, repoPath string, p
 
 	output := ""
 	var resultErr error
-	err := self.cmd.New(args).SetWd(workDir).SetStdin(prompt).DontLog().RunAndProcessOutputLines(func(line string) {
+	err := self.cmd.New(args).SetWd(workDir).SetStdin(prompt).SetCancel(cancel).DontLog().RunAndProcessOutputLines(func(line string) {
 		progress, final, err := parseClaudeGuideEvent(line, repoPath)
 		if progress != "" {
 			onProgress(progress)

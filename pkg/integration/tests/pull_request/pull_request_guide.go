@@ -52,6 +52,9 @@ GUIDE
 			).
 			Press(keys.PullRequests.Guide)
 
+		// The AI writes the guide in the background
+		t.Views().Main().ContentEventually(Contains("Written by claude (sonnet)"))
+
 		t.Views().PullRequestGuide().
 			IsFocused().
 			Title(Contains("#12 Add a feature")).

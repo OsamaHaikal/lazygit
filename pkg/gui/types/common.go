@@ -441,6 +441,8 @@ type PullRequestGuideState struct {
 	// The latest things the provider said it's doing while writing the guide,
 	// oldest first
 	Progress []string
+	// Stops writing the guide
+	Cancel func()
 }
 
 func (self *PullRequestGuideState) IsGenerating() bool {

@@ -200,6 +200,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` 0 `` | Focus main view |  |
 | `` <enter> `` | View chapter files | Show the files of this chapter, to go through their diffs and comment on their lines. |
 | `` F `` | View files changed | Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab. |
+| `` d `` | Stop writing guide |  |
 | `` R `` | Rewrite guide |  |
 
 ## Input prompt

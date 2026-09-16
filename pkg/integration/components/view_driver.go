@@ -360,6 +360,21 @@ func (self *ViewDriver) Content(matcher *TextMatcher) *ViewDriver {
 	return self
 }
 
+// ContentEventually is like Content, but waits for the content to match, for
+// work that lazygit doesn't count as keeping it busy, like waiting on an
+// external program that takes a long time.
+func (self *ViewDriver) ContentEventually(matcher *TextMatcher) *ViewDriver {
+	self.t.assertEventually(func() (bool, string) {
+		var content string
+		self.t.gui.OnUIThreadAndWait(func() {
+			content = self.getView().Buffer()
+		})
+		return matcher.context(fmt.Sprintf("%s: Unexpected content.", self.context)).test(content)
+	})
+
+	return self
+}
+
 // SelectionIsActive asserts that the view draws its selection as the one the user
 // is working in. These three assertions read the highlight flags rather than the
 // selected lines, which say nothing about whether the selection is drawn at all.

@@ -53,6 +53,13 @@ func (self *PullRequestGuideController) GetKeybindings(opts types.KeybindingsOpt
 			Tooltip:           self.c.Tr.ViewPullRequestFilesTooltip,
 		},
 		{
+			Keys:              opts.GetKeys(opts.Config.Universal.Remove),
+			Handler:           self.cancel,
+			GetDisabledReason: self.whileWriting,
+			Description:       self.c.Tr.CancelPullRequestGuide,
+			DisplayOnScreen:   true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.Universal.Refresh),
 			Handler:           self.rewrite,
 			GetDisabledReason: self.notWhileWriting,
@@ -167,6 +174,18 @@ func (self *PullRequestGuideController) rewrite() error {
 			return nil
 		},
 	})
+	return nil
+}
+
+func (self *PullRequestGuideController) cancel() error {
+	self.context().GetGuideState().Cancel()
+	return nil
+}
+
+func (self *PullRequestGuideController) whileWriting() *types.DisabledReason {
+	if state := self.context().GetGuideState(); state == nil || !state.IsGenerating() {
+		return &types.DisabledReason{Text: self.c.Tr.PullRequestGuideNotBeingWritten}
+	}
 	return nil
 }
 

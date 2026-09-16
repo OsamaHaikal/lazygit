@@ -460,6 +460,9 @@ type TranslationSet struct {
 	PullRequestGuideStillBeingWritten     string
 	ViewGuideChapterFiles                 string
 	ViewGuideChapterFilesTooltip          string
+	CancelPullRequestGuide                string
+	PullRequestGuideCancelled             string
+	PullRequestGuideNotBeingWritten       string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1730,6 +1733,9 @@ func EnglishTranslationSet() *TranslationSet {
 		PullRequestGuideStillBeingWritten:    "The guide is still being written",
 		ViewGuideChapterFiles:                "View chapter files",
 		ViewGuideChapterFilesTooltip:         "Show the files of this chapter, to go through their diffs and comment on their lines.",
+		CancelPullRequestGuide:               "Stop writing guide",
+		PullRequestGuideCancelled:            "you stopped it",
+		PullRequestGuideNotBeingWritten:      "The guide isn't being written",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",

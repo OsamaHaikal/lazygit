@@ -5,12 +5,14 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/jesseduffield/lazygit/pkg/commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/config"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
@@ -59,7 +61,12 @@ func (self *PullRequestsHelper) writeGuide(pr *models.GithubPullRequest, head *m
 	if listState.Guides == nil {
 		listState.Guides = map[int]*types.PullRequestGuideState{}
 	}
-	state := &types.PullRequestGuideState{Head: head, StartedAt: time.Now()}
+	cancel := make(chan struct{})
+	state := &types.PullRequestGuideState{
+		Head:      head,
+		StartedAt: time.Now(),
+		Cancel:    sync.OnceFunc(func() { close(cancel) }),
+	}
 	listState.Guides[pr.Number] = state
 
 	repo := *listState.Repo
@@ -81,9 +88,9 @@ func (self *PullRequestsHelper) writeGuide(pr *models.GithubPullRequest, head *m
 	// Writing a guide takes minutes and runs no commands that change the repo,
 	// so it mustn't count towards lazygit being busy
 	done := make(chan struct{})
-	self.c.OnWorkerBackground(func(gocui.Task) error {
+	self.c.OnWorkerBackground(func(task gocui.Task) error {
 		defer close(done)
-		guide, err := self.getGuide(git, repo, pr, head, guideConfig, force,
+		guide, err := self.getGuide(task, git, repo, pr, head, guideConfig, force, cancel,
 			func(provider string) {
 				onUIThread(func() { state.Provider = provider })
 			},
@@ -109,19 +116,20 @@ func (self *PullRequestsHelper) writeGuide(pr *models.GithubPullRequest, head *m
 		return nil
 	})
 
-	self.c.OnWorkerBackground(func(gocui.Task) error {
+	go utils.Safe(func() {
 		self.rerenderWhileWritingGuide(pr.Number, done, onUIThread)
-		return nil
 	})
 }
 
 func (self *PullRequestsHelper) getGuide(
+	task gocui.Task,
 	git *commands.GitCommand,
 	repo hosting_service.ServiceInfo,
 	pr *models.GithubPullRequest,
 	head *models.PullRequestHead,
 	guideConfig config.PullRequestGuideConfig,
 	force bool,
+	cancel <-chan struct{},
 	onProviderResolved func(string),
 	onProgress func(string),
 ) (*git_commands.PullRequestGuide, error) {
@@ -148,6 +156,7 @@ func (self *PullRequestsHelper) getGuide(
 		MergeBase:   head.MergeBaseOid,
 		Head:        head.RefName(),
 		OnProgress:  onProgress,
+		Cancel:      cancel,
 	}
 	cachePath, cachePathErr := config.PullRequestGuideCachePath(git_commands.GuideCacheKey(opts))
 
@@ -157,7 +166,14 @@ func (self *PullRequestsHelper) getGuide(
 		}
 	}
 
+	// The agent takes minutes and we're only waiting for it meanwhile; a
+	// paused task doesn't keep lazygit from counting as idle
+	task.Pause()
 	guide, err := git.GitHub.GeneratePullRequestGuide(opts)
+	task.Continue()
+	if errors.Is(err, oscommands.ErrCommandCancelled) {
+		return nil, errors.New(self.c.Tr.PullRequestGuideCancelled)
+	}
 	if err != nil {
 		return nil, err
 	}
