@@ -141,6 +141,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | Przełącz zaznaczenie zakresu |  |
 | `` a `` | Toggle hunk selection | Toggle line-by-line vs. hunk selection mode. |
 | `` <ctrl+o> `` | Kopiuj zaznaczony tekst do schowka |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | Otwórz plik | Otwórz plik w domyślnej aplikacji. |
 | `` e `` | Edytuj plik | Otwórz plik w zewnętrznym edytorze. |
 | `` <space> `` | Przełącz linie w łatce |  |

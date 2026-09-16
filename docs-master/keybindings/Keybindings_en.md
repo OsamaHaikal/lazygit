@@ -235,6 +235,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | Toggle range select |  |
 | `` a `` | Toggle hunk selection | Toggle line-by-line vs. hunk selection mode. |
 | `` <ctrl+o> `` | Copy selected text to clipboard |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | Open file | Open file in default application. |
 | `` e `` | Edit file | Open file in external editor. |
 | `` <space> `` | Toggle lines in patch |  |

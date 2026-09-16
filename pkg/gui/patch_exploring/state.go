@@ -386,6 +386,28 @@ func (s *State) LineIndicesOfAddedOrDeletedLinesInSelectedPatchRange() []int {
 	return indices
 }
 
+// SelectedFileLines returns the first and last lines of the file that the
+// selection shows, ignoring any headers at its edges. ok is false if it shows
+// no lines of the file at all.
+func (s *State) SelectedFileLines() (start patch.FileLine, end patch.FileLine, ok bool) {
+	startIdx, endIdx := s.SelectedPatchRange()
+	for ; startIdx <= endIdx; startIdx++ {
+		if start, ok = s.patch.FileLineOfLine(startIdx); ok {
+			break
+		}
+	}
+	if !ok {
+		return start, end, false
+	}
+
+	for ; endIdx >= startIdx; endIdx-- {
+		if end, ok = s.patch.FileLineOfLine(endIdx); ok {
+			break
+		}
+	}
+	return start, end, ok
+}
+
 func (s *State) CurrentLineNumber() int {
 	return s.patch.LineNumberOfLine(s.patchLineIndices[s.selectedLineIdx])
 }

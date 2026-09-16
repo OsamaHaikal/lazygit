@@ -7,6 +7,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+	"github.com/jesseduffield/lazygit/pkg/commands/patch"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -228,6 +229,56 @@ func TestHasCommits(t *testing.T) {
 			instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
 
 			assert.Equal(t, c.expected, instance.HasCommits("abc", "def"))
+			runner.CheckForMissingCalls()
+		})
+	}
+}
+
+func TestCommentOnPullRequestLines(t *testing.T) {
+	t.Setenv("GH_PATH", "gh")
+
+	cases := []struct {
+		name         string
+		opts         PullRequestLineCommentOpts
+		expectedArgs []string
+	}{
+		{
+			name: "single added line",
+			opts: PullRequestLineCommentOpts{
+				Number: 12, CommitOid: "abc123", Path: "dir/file.go", Body: "Why?",
+				StartLine: patch.FileLine{Number: 7},
+				EndLine:   patch.FileLine{Number: 7},
+			},
+			expectedArgs: []string{
+				"gh", "api", "--hostname", "github.com", "--method", "POST",
+				"repos/jesseduffield/lazygit/pulls/12/comments",
+				"-f", "body=Why?", "-f", "commit_id=abc123", "-f", "path=dir/file.go",
+				"-F", "line=7", "-f", "side=RIGHT",
+			},
+		},
+		{
+			name: "range starting at a deleted line",
+			opts: PullRequestLineCommentOpts{
+				Number: 12, CommitOid: "abc123", Path: "file.go", Body: "Nice",
+				StartLine: patch.FileLine{Number: 3, IsOld: true},
+				EndLine:   patch.FileLine{Number: 5},
+			},
+			expectedArgs: []string{
+				"gh", "api", "--hostname", "github.com", "--method", "POST",
+				"repos/jesseduffield/lazygit/pulls/12/comments",
+				"-f", "body=Nice", "-f", "commit_id=abc123", "-f", "path=file.go",
+				"-F", "line=5", "-f", "side=RIGHT",
+				"-F", "start_line=3", "-f", "start_side=LEFT",
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			runner := oscommands.NewFakeRunner(t).ExpectArgs(c.expectedArgs, "", nil)
+			instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+			assert.NoError(t, instance.CommentOnPullRequestLines(testGithubRepo, c.opts))
 			runner.CheckForMissingCalls()
 		})
 	}

@@ -192,6 +192,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | 드래그 선택 전환 |  |
 | `` a `` | Toggle hunk selection | Toggle line-by-line vs. hunk selection mode. |
 | `` <ctrl+o> `` | 선택한 텍스트를 클립보드에 복사 |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | 파일 닫기 | Open file in default application. |
 | `` e `` | 파일 편집 | Open file in external editor. |
 | `` <space> `` | Line(s)을 패치에 추가/삭제 |  |

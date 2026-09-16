@@ -79,6 +79,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | 切換拖曳選擇 |  |
 | `` a `` | 切換程式碼塊選擇 | 切換逐行選擇與程式碼塊選擇模式。 |
 | `` <ctrl+o> `` | 複製所選文本至剪貼簿 |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | 開啟檔案 | 使用預設軟體開啟 |
 | `` e `` | 編輯檔案 | 使用外部編輯器開啟 |
 | `` <space> `` | 向 (或從) 補丁中添加/刪除行 |  |

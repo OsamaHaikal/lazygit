@@ -243,6 +243,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | Toggle drag selecteer |  |
 | `` a `` | Wissel tussen hunk selectie aan of uit | Wissel tussen regel-voor-regel of hunk selectie modus. |
 | `` <ctrl+o> `` | Copy selected text to clipboard |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | Open bestand | Open bestand in standaardapplicatie. |
 | `` e `` | Verander bestand | Open bestand in externe editor. |
 | `` <space> `` | Voeg toe/verwijder lijn(en) in patch |  |

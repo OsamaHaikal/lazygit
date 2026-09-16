@@ -422,6 +422,12 @@ type TranslationSet struct {
 	ViewPullRequestCommits                string
 	ViewPullRequestFiles                  string
 	ViewPullRequestFilesTooltip           string
+	CommentOnPullRequestLines             string
+	CommentOnPullRequestLinesTooltip      string
+	CommentOnPullRequestLinesTitle        string
+	NotViewingPullRequestDiff             string
+	NoFileLinesSelected                   string
+	PullRequestCommentAdded               string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1195,6 +1201,7 @@ type Actions struct {
 	ConvertPullRequestToDraft        string
 	CommentOnPullRequest             string
 	ReviewPullRequest                string
+	CommentOnPullRequestLines        string
 	StartBisect                      string
 	ResetBisect                      string
 	BisectSkip                       string
@@ -1652,6 +1659,12 @@ func EnglishTranslationSet() *TranslationSet {
 		ViewPullRequestCommits:               "View commits",
 		ViewPullRequestFiles:                 "View files changed",
 		ViewPullRequestFilesTooltip:          "Show all the files the pull request changes, compared to where it branched off its base branch, like GitHub's 'Files changed' tab.",
+		CommentOnPullRequestLines:            "Comment on selected lines",
+		CommentOnPullRequestLinesTooltip:     "Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab.",
+		CommentOnPullRequestLinesTitle:       "Comment on {{.path}}:{{.lines}}",
+		NotViewingPullRequestDiff:            "Only lines of a pull request's diff, or of one of its commits, can be commented on",
+		NoFileLinesSelected:                  "The selection doesn't contain any lines of the file",
+		PullRequestCommentAdded:              "Comment added",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",
@@ -2380,6 +2393,7 @@ func EnglishTranslationSet() *TranslationSet {
 			ConvertPullRequestToDraft:        "Convert pull request to draft",
 			CommentOnPullRequest:             "Comment on pull request",
 			ReviewPullRequest:                "Review pull request",
+			CommentOnPullRequestLines:        "Comment on pull request lines",
 			StartBisect:                      "Start bisect",
 			ResetBisect:                      "Reset bisect",
 			BisectSkip:                       "Bisect skip",

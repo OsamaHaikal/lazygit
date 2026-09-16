@@ -9,6 +9,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
+	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -193,4 +194,32 @@ func (self *PullRequestsHelper) rerender() {
 	context.GetView().Subtitle = self.subtitle()
 	self.searchHelper.ReApplyFilter(context)
 	self.c.PostRefreshUpdate(context)
+}
+
+// PullRequestOfCommitFiles returns the pull request whose changes the commit
+// files view is showing, along with the commit whose diff it shows, which is
+// either the pull request's head (for all of its changes) or one of its
+// commits. It returns nil if the view isn't showing a pull request's changes,
+// or is showing a diff that GitHub has no way to refer to, such as the
+// combined diff of a range of commits.
+func (self *PullRequestsHelper) PullRequestOfCommitFiles() (*models.GithubPullRequest, string) {
+	commitFilesContext := self.c.Contexts().CommitFiles
+	if commitFilesContext.GetRefRange() != nil || self.c.Modes().Diffing.Active() {
+		return nil, ""
+	}
+
+	switch ref := commitFilesContext.GetRef().(type) {
+	case *models.PullRequestHead:
+		return ref.PullRequest, ref.RefName()
+	case *models.Commit:
+		parentContext := commitFilesContext.GetParentContext()
+		if parentContext == nil || parentContext.GetKey() != context.SUB_COMMITS_CONTEXT_KEY {
+			return nil, ""
+		}
+		if head, ok := self.c.Contexts().SubCommits.GetRef().(*models.PullRequestHead); ok {
+			return head.PullRequest, ref.Hash()
+		}
+	}
+
+	return nil, ""
 }

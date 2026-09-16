@@ -682,6 +682,34 @@ func TestLineNumberOfLine(t *testing.T) {
 	}
 }
 
+func TestFileLineOfLine(t *testing.T) {
+	type expected struct {
+		fileLine FileLine
+		ok       bool
+	}
+
+	patch := Parse(twoHunks)
+	cases := map[int]expected{
+		0:    {FileLine{}, false},                      // patch header
+		4:    {FileLine{}, false},                      // hunk header
+		5:    {FileLine{Number: 1}, true},              // context
+		6:    {FileLine{Number: 2, IsOld: true}, true}, // -grape
+		7:    {FileLine{Number: 2}, true},              // +orange
+		8:    {FileLine{Number: 3}, true},              // context
+		11:   {FileLine{}, false},                      // hunk header
+		12:   {FileLine{Number: 8}, true},              // context
+		15:   {FileLine{Number: 11}, true},             // +pear
+		16:   {FileLine{Number: 12}, true},             // +lemon
+		17:   {FileLine{Number: 13}, true},             // context
+		1000: {FileLine{}, false},                      // out of range
+	}
+
+	for idx, c := range cases {
+		fileLine, ok := patch.FileLineOfLine(idx)
+		assert.Equal(t, c, expected{fileLine, ok}, "line index %d", idx)
+	}
+}
+
 func TestGetNextStageableLineIndex(t *testing.T) {
 	type scenario struct {
 		testName  string

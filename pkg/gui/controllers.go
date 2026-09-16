@@ -191,6 +191,7 @@ func (gui *Gui) resetHelpersAndControllers() {
 	mainViewController := controllers.NewMainViewController(common, gui.State.Contexts.Normal, gui.State.Contexts.NormalSecondary)
 	secondaryViewController := controllers.NewMainViewController(common, gui.State.Contexts.NormalSecondary, gui.State.Contexts.Normal)
 	patchBuildingController := controllers.NewPatchBuildingController(common)
+	pullRequestLineCommentController := controllers.NewPullRequestLineCommentController(common)
 	snakeController := controllers.NewSnakeController(common)
 	reflogCommitsController := controllers.NewReflogCommitsController(common)
 	subCommitsController := controllers.NewSubCommitsController(common)
@@ -302,6 +303,7 @@ func (gui *Gui) resetHelpersAndControllers() {
 
 	controllers.AttachControllers(gui.State.Contexts.CustomPatchBuilder,
 		patchBuildingController,
+		pullRequestLineCommentController,
 		patchExplorerControllerFactory.Create(gui.State.Contexts.CustomPatchBuilder),
 		verticalScrollControllerFactory.Create(gui.State.Contexts.CustomPatchBuilder),
 	)

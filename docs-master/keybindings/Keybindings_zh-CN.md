@@ -276,6 +276,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | 切换拖动选择 |  |
 | `` a `` | 切换代码块选择 | 切换逐行选择与代码块选择模式。 |
 | `` <ctrl+o> `` | 复制选中文本到剪贴板 |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | 打开文件 | 使用默认程序打开该文件 |
 | `` e `` | 编辑文件 | 使用外部编辑器打开文件 |
 | `` <space> `` | 添加/移除 行到补丁 |  |

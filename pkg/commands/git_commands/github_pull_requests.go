@@ -11,6 +11,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+	"github.com/jesseduffield/lazygit/pkg/commands/patch"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/samber/lo"
 )
@@ -308,4 +309,51 @@ func (self *GitHubCommands) MergeBase(hash1 string, hash2 string) (string, error
 
 	output, err := self.cmd.New(cmdArgs).DontLog().RunWithOutput()
 	return strings.TrimSpace(output), err
+}
+
+// diffSide returns how GitHub's API refers to the side of the diff a line is on
+func diffSide(line patch.FileLine) string {
+	if line.IsOld {
+		return "LEFT"
+	}
+	return "RIGHT"
+}
+
+type PullRequestLineCommentOpts struct {
+	Number int
+	// The commit whose diff the lines are in
+	CommitOid string
+	Path      string
+	// The first and last line of the commented range; the same line when
+	// commenting on a single line
+	StartLine patch.FileLine
+	EndLine   patch.FileLine
+	Body      string
+}
+
+// CommentOnPullRequestLines adds a review comment to lines of a file in the
+// pull request's diff, the way you would on GitHub's "Files changed" tab.
+func (self *GitHubCommands) CommentOnPullRequestLines(repo hosting_service.ServiceInfo, opts PullRequestLineCommentOpts) error {
+	args := []string{
+		"api", "--hostname", repo.WebDomain, "--method", "POST",
+		fmt.Sprintf("repos/%s/pulls/%d/comments", repo.RepoName, opts.Number),
+		"-f", "body=" + opts.Body,
+		"-f", "commit_id=" + opts.CommitOid,
+		"-f", "path=" + opts.Path,
+		"-F", fmt.Sprintf("line=%d", opts.EndLine.Number),
+		"-f", "side=" + diffSide(opts.EndLine),
+	}
+	if opts.StartLine != opts.EndLine {
+		args = append(args,
+			"-F", fmt.Sprintf("start_line=%d", opts.StartLine.Number),
+			"-f", "start_side="+diffSide(opts.StartLine),
+		)
+	}
+
+	cmdObj, err := self.ghCmdObj(args...)
+	if err != nil {
+		return err
+	}
+
+	return cmdObj.Run()
 }

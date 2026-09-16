@@ -293,6 +293,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | Toggle range select |  |
 | `` a `` | Toggle hunk selection | Ativa/desativa modo linha por linha vs. modo de seleção por partes. |
 | `` <ctrl+o> `` | Copiar texto selecionado para área de transferência |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | Abrir arquivo | Abrir arquivo no aplicativo padrão. |
 | `` e `` | Editar arquivo | Abrir arquivo no editor externo. |
 | `` <space> `` | Alternar linhas no caminho |  |

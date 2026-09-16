@@ -152,6 +152,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | Переключить выборку перетаскивания |  |
 | `` a `` | Toggle hunk selection | Toggle line-by-line vs. hunk selection mode. |
 | `` <ctrl+o> `` | Скопировать выделенный текст в буфер обмена |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | Открыть файл | Open file in default application. |
 | `` e `` | Редактировать файл | Open file in external editor. |
 | `` <space> `` | Добавить/удалить строку(и) для патча |  |

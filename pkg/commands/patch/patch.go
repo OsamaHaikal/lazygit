@@ -114,6 +114,37 @@ func (self *Patch) LineNumberOfLine(idx int) int {
 	return hunk.newStart + offset
 }
 
+// A line of a file as it appears in a diff
+type FileLine struct {
+	Number int
+	// Whether Number is the line's number in the old version of the file
+	// (which is the case for deleted lines) rather than in the new one
+	IsOld bool
+}
+
+// Takes a line index in the patch and returns the line of the file that it
+// shows. ok is false for lines that aren't part of a hunk body, i.e. the patch
+// header and the hunk headers.
+func (self *Patch) FileLineOfLine(idx int) (fileLine FileLine, ok bool) {
+	hunkIdx := self.HunkContainingLine(idx)
+	if hunkIdx == -1 {
+		return FileLine{}, false
+	}
+
+	hunk := self.hunks[hunkIdx]
+	idxInHunk := idx - self.HunkStartIdx(hunkIdx)
+	if idxInHunk == 0 {
+		return FileLine{}, false
+	}
+
+	precedingLines := hunk.bodyLines[:idxInHunk-1]
+	if hunk.bodyLines[idxInHunk-1].Kind == DELETION {
+		return FileLine{Number: hunk.oldStart + nLinesWithKind(precedingLines, []PatchLineKind{DELETION, CONTEXT}), IsOld: true}, true
+	}
+
+	return FileLine{Number: hunk.newStart + nLinesWithKind(precedingLines, []PatchLineKind{ADDITION, CONTEXT})}, true
+}
+
 // Returns hunk index containing the line at the given patch line index
 func (self *Patch) HunkContainingLine(idx int) int {
 	for hunkIdx, hunk := range self.hunks {

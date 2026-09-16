@@ -293,6 +293,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` v `` | 範囲選択を切り替え |  |
 | `` a `` | ハンクの選択を切り替える | Toggle line-by-line vs. hunk selection mode. |
 | `` <ctrl+o> `` | 選択したテキストをクリップボードにコピー |  |
+| `` c `` | Comment on selected lines | Add a review comment on the pull request for the selected line, range, or hunk, like commenting in GitHub's 'Files changed' tab. |
 | `` o `` | ファイルを開く | デフォルトのアプリケーションでファイルを開きます。 |
 | `` e `` | ファイルを編集 | 外部エディタでファイルを開きます。 |
 | `` <space> `` | パッチ内の行を切り替え |  |
