@@ -1001,6 +1001,7 @@ type capturedSubCommitState struct {
 	ref                     models.Ref
 	limitCommits            bool
 	refToShowDivergenceFrom string
+	refToExclude            string
 	filterPath              string
 	filterAuthor            string
 	mainBranches            *git_commands.MainBranches
@@ -1014,6 +1015,7 @@ func (self *RefreshHelper) captureSubCommitState() capturedSubCommitState {
 		ref:                     self.c.Contexts().SubCommits.GetRef(),
 		limitCommits:            self.c.Contexts().SubCommits.GetLimitCommits(),
 		refToShowDivergenceFrom: self.c.Contexts().SubCommits.GetRefToShowDivergenceFrom(),
+		refToExclude:            self.c.Contexts().SubCommits.GetRefToExclude(),
 		filterPath:              self.c.Modes().Filtering.GetPath(),
 		filterAuthor:            self.c.Modes().Filtering.GetAuthor(),
 		mainBranches:            self.c.Model().MainBranches,
@@ -1034,6 +1036,7 @@ func (self *RefreshHelper) refreshSubCommitsWithLimit(captured capturedSubCommit
 			IncludeRebaseCommits:    false,
 			RefName:                 captured.ref.FullRefName(),
 			RefToShowDivergenceFrom: captured.refToShowDivergenceFrom,
+			RefToExclude:            captured.refToExclude,
 			RefForPushedStatus:      captured.ref,
 			MainBranches:            captured.mainBranches,
 			HashPool:                captured.hashPool,

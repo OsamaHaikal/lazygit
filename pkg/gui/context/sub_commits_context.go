@@ -140,6 +140,8 @@ type SubCommitsViewModel struct {
 	// name of the ref that the sub-commits are shown for
 	ref                     models.Ref
 	refToShowDivergenceFrom string
+	// commits reachable from this ref are left out
+	refToExclude string
 	*ListViewModel[*models.Commit]
 
 	limitCommits    bool
@@ -160,6 +162,14 @@ func (self *SubCommitsViewModel) SetRefToShowDivergenceFrom(ref string) {
 
 func (self *SubCommitsViewModel) GetRefToShowDivergenceFrom() string {
 	return self.refToShowDivergenceFrom
+}
+
+func (self *SubCommitsViewModel) SetRefToExclude(ref string) {
+	self.refToExclude = ref
+}
+
+func (self *SubCommitsViewModel) GetRefToExclude() string {
+	return self.refToExclude
 }
 
 func (self *SubCommitsViewModel) SetShowBranchHeads(value bool) {

@@ -51,6 +51,16 @@ func TestGetCommits(t *testing.T) {
 			expectedError:      nil,
 		},
 		{
+			testName: "should leave out the commits of the ref to exclude",
+			logOrder: "topo-order",
+			opts:     GetCommitsOptions{RefName: "abc123", RefToExclude: "def456", IncludeRebaseCommits: false},
+			runner: oscommands.NewFakeRunner(t).
+				ExpectGitArgs([]string{"log", "abc123", "^def456", "--topo-order", "--oneline", "--pretty=format:+%H%x00%at%x00%aN%x00%ae%x00%P%x00%m%x00%D%x00%s", "--abbrev=40", "--no-show-signature", "--"}, "", nil),
+
+			expectedCommitOpts: []models.NewCommitOpts{},
+			expectedError:      nil,
+		},
+		{
 			testName: "should use proper upstream name for branch",
 			logOrder: "topo-order",
 			opts:     GetCommitsOptions{RefName: "refs/heads/mybranch", RefForPushedStatus: &models.Branch{Name: "mybranch"}, IncludeRebaseCommits: false},

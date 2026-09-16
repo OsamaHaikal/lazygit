@@ -66,8 +66,10 @@ type GetCommitsOptions struct {
 	All bool
 	// If non-empty, show divergence from this ref (left-right log)
 	RefToShowDivergenceFrom string
-	MainBranches            *MainBranches
-	HashPool                *utils.StringPool
+	// If non-empty, leave out the commits reachable from this ref
+	RefToExclude string
+	MainBranches *MainBranches
+	HashPool     *utils.StringPool
 }
 
 // GetCommits obtains the commits of the current branch
@@ -605,6 +607,7 @@ func (self *CommitLoader) getLogCmd(opts GetCommitsOptions) *oscommands.CmdObj {
 
 	cmdArgs := NewGitCmd("log").
 		Arg(refSpec).
+		ArgIf(opts.RefToExclude != "", "^"+opts.RefToExclude).
 		ArgIf(gitLogOrder != "default", "--"+gitLogOrder).
 		ArgIf(opts.All, "--all").
 		Arg("--oneline").

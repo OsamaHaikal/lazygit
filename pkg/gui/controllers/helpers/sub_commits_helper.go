@@ -26,6 +26,7 @@ func NewSubCommitsHelper(
 type ViewSubCommitsOpts struct {
 	Ref                     models.Ref
 	RefToShowDivergenceFrom string
+	RefToExclude            string
 	TitleRef                string
 	Context                 types.Context
 	ShowBranchHeads         bool
@@ -41,6 +42,7 @@ func (self *SubCommitsHelper) ViewSubCommits(opts ViewSubCommitsOpts) error {
 			RefName:                 opts.Ref.FullRefName(),
 			RefForPushedStatus:      opts.Ref,
 			RefToShowDivergenceFrom: opts.RefToShowDivergenceFrom,
+			RefToExclude:            opts.RefToExclude,
 			MainBranches:            self.c.Model().MainBranches,
 			HashPool:                self.c.Model().HashPool,
 		},
@@ -59,6 +61,7 @@ func (self *SubCommitsHelper) ViewSubCommits(opts ViewSubCommitsOpts) error {
 	subCommitsContext.SetTitleRef(utils.TruncateWithEllipsis(opts.TitleRef, 50))
 	subCommitsContext.SetRef(opts.Ref)
 	subCommitsContext.SetRefToShowDivergenceFrom(opts.RefToShowDivergenceFrom)
+	subCommitsContext.SetRefToExclude(opts.RefToExclude)
 	subCommitsContext.SetLimitCommits(true)
 	subCommitsContext.SetShowBranchHeads(opts.ShowBranchHeads)
 	subCommitsContext.ClearSearchString()
