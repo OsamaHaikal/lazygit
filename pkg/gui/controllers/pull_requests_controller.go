@@ -86,6 +86,15 @@ func (self *PullRequestsController) GetKeybindings(opts types.KeybindingsOpts) [
 			DisplayOnScreen:   true,
 		},
 		{
+			Keys:              opts.GetKeys(opts.Config.PullRequests.Edit),
+			Handler:           self.withItem(self.edit),
+			GetDisabledReason: self.require(self.singleItemSelected()),
+			Description:       self.c.Tr.EditPullRequestOptions,
+			Tooltip:           self.c.Tr.EditPullRequestTooltip,
+			OpensMenu:         true,
+			DisplayOnScreen:   true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.PullRequests.ToggleDraft),
 			Handler:           self.withItem(self.toggleDraft),
 			GetDisabledReason: self.require(self.singleItemSelected(self.isOpen)),
@@ -304,6 +313,137 @@ func (self *PullRequestsController) comment(pr *models.GithubPullRequest) error 
 		},
 	})
 	return nil
+}
+
+func (self *PullRequestsController) edit(pr *models.GithubPullRequest) error {
+	github := self.c.Git().GitHub
+
+	return self.c.Menu(types.CreateMenuOptions{
+		Title: self.c.Tr.EditPullRequestOptions,
+		Items: []*types.MenuItem{
+			{
+				Label: self.c.Tr.RequestReview,
+				OnPress: func() error {
+					return self.promptForEdit(pr, self.c.Tr.RequestReview, "", github.ListAssignableUsers,
+						git_commands.PullRequestEditAddReviewer)
+				},
+			},
+			self.removeMenuItem(pr, self.c.Tr.RemoveReviewRequest, pr.ReviewRequests, self.c.Tr.NoReviewRequests,
+				git_commands.PullRequestEditRemoveReviewer),
+			{
+				Label: self.c.Tr.AssignToMe,
+				OnPress: func() error {
+					return self.editPullRequest(pr, git_commands.PullRequestEditAddAssignee, "@me")
+				},
+			},
+			{
+				Label: self.c.Tr.AddAssignee,
+				OnPress: func() error {
+					return self.promptForEdit(pr, self.c.Tr.AddAssignee, "", github.ListAssignableUsers,
+						git_commands.PullRequestEditAddAssignee)
+				},
+			},
+			self.removeMenuItem(pr, self.c.Tr.RemoveAssignee, pr.Assignees, self.c.Tr.NoAssignees,
+				git_commands.PullRequestEditRemoveAssignee),
+			{
+				Label: self.c.Tr.AddLabel,
+				OnPress: func() error {
+					return self.promptForEdit(pr, self.c.Tr.AddLabel, "", github.ListLabels,
+						git_commands.PullRequestEditAddLabel)
+				},
+			},
+			self.removeMenuItem(pr, self.c.Tr.RemoveLabel, pr.Labels, self.c.Tr.NoLabels,
+				git_commands.PullRequestEditRemoveLabel),
+			{
+				Label: self.c.Tr.EditPullRequestTitle,
+				OnPress: func() error {
+					return self.promptForEdit(pr, self.c.Tr.EditPullRequestTitle, pr.Title, nil,
+						git_commands.PullRequestEditTitle)
+				},
+			},
+		},
+	})
+}
+
+// promptForEdit asks for the value of an edit, suggesting the values that
+// loadSuggestions returns, if given.
+func (self *PullRequestsController) promptForEdit(
+	pr *models.GithubPullRequest,
+	title string,
+	initialContent string,
+	loadSuggestions func(hosting_service.ServiceInfo) ([]string, error),
+	edit git_commands.PullRequestEdit,
+) error {
+	prompt := func(suggestions []string) {
+		self.c.Prompt(types.PromptOpts{
+			Title:               title,
+			InitialContent:      initialContent,
+			FindSuggestionsFunc: helpers.FilterFunc(suggestions, self.c.UserConfig().Gui.UseFuzzySearch()),
+			HandleConfirm: func(value string) error {
+				return self.editPullRequest(pr, edit, value)
+			},
+		})
+	}
+
+	if loadSuggestions == nil {
+		prompt(nil)
+		return nil
+	}
+
+	repo := *self.c.Model().PullRequestListState.Repo
+	return self.c.WithWaitingStatus(self.c.Tr.LoadingSuggestions, func(gocui.Task) error {
+		suggestions, err := loadSuggestions(repo)
+		if err != nil {
+			return err
+		}
+
+		self.c.OnUIThread(func() error {
+			prompt(suggestions)
+			return nil
+		})
+		return nil
+	})
+}
+
+// removeMenuItem returns a menu item that opens a menu for removing one of the
+// given values from the pull request.
+func (self *PullRequestsController) removeMenuItem(
+	pr *models.GithubPullRequest,
+	label string,
+	values []string,
+	noValuesReason string,
+	edit git_commands.PullRequestEdit,
+) *types.MenuItem {
+	var disabledReason *types.DisabledReason
+	if len(values) == 0 {
+		disabledReason = &types.DisabledReason{Text: noValuesReason}
+	}
+
+	return &types.MenuItem{
+		Label:          label,
+		DisabledReason: disabledReason,
+		OpensMenu:      true,
+		OnPress: func() error {
+			return self.c.Menu(types.CreateMenuOptions{
+				Title: label,
+				Items: lo.Map(values, func(value string, _ int) *types.MenuItem {
+					return &types.MenuItem{
+						Label: value,
+						OnPress: func() error {
+							return self.editPullRequest(pr, edit, value)
+						},
+					}
+				}),
+			})
+		},
+	}
+}
+
+func (self *PullRequestsController) editPullRequest(pr *models.GithubPullRequest, edit git_commands.PullRequestEdit, value string) error {
+	return self.runAction(self.c.Tr.Actions.EditPullRequest, self.c.Tr.UpdatingPullRequest,
+		func(repo hosting_service.ServiceInfo) error {
+			return self.c.Git().GitHub.EditPullRequest(repo, pr.Number, edit, value)
+		})
 }
 
 func (self *PullRequestsController) toggleDraft(pr *models.GithubPullRequest) error {

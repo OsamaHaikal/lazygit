@@ -832,6 +832,7 @@ keybinding:
     closeOrReopen: d
     filter: f
     viewFiles: F
+    edit: e
   commitMessage:
     commitMenu: <ctrl+o>
 ```

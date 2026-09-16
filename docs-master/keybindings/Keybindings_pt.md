@@ -311,6 +311,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` M `` | Merge pull request | Merge the pull request on GitHub, or enable auto-merge so that GitHub merges it once checks and reviews pass. |
 | `` a `` | Review pull request |  |
 | `` c `` | Add comment |  |
+| `` e `` | Edit pull request | Request or remove reviews, change assignees and labels, or edit the title. |
 | `` r `` | Mark as ready/convert to draft | Mark a draft pull request as ready for review, or convert an open one back to a draft. |
 | `` d `` | Close/reopen pull request |  |
 | `` G `` | Open pull request in browser |  |

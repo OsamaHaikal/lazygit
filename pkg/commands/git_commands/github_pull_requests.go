@@ -57,6 +57,9 @@ var listPullRequestsQuery = fmt.Sprintf(`query($q: String!) {
         author { login }
         headRepositoryOwner { login }
         comments { totalCount }
+        assignees(first: 20) { nodes { login } }
+        reviewRequests(first: 20) { nodes { requestedReviewer { ... on User { login } ... on Team { combinedSlug } } } }
+        labels(first: 20) { nodes { name } }
         commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
       }
     }
@@ -148,6 +151,28 @@ type pullRequestListNode struct {
 			Commit GithubGitObject `json:"commit"`
 		} `json:"nodes"`
 	} `json:"commits"`
+	Assignees struct {
+		Nodes []GithubRepositoryOwner `json:"nodes"`
+	} `json:"assignees"`
+	ReviewRequests struct {
+		Nodes []pullRequestReviewRequestNode `json:"nodes"`
+	} `json:"reviewRequests"`
+	Labels struct {
+		Nodes []pullRequestLabelNode `json:"nodes"`
+	} `json:"labels"`
+}
+
+type pullRequestReviewRequestNode struct {
+	// A review can be requested from a user, who has a login, or from a team,
+	// which has a slug like "org/team"
+	RequestedReviewer struct {
+		Login        string `json:"login"`
+		CombinedSlug string `json:"combinedSlug"`
+	} `json:"requestedReviewer"`
+}
+
+type pullRequestLabelNode struct {
+	Name string `json:"name"`
 }
 
 func parsePullRequestListResponse(respBytes []byte) ([]*models.GithubPullRequest, error) {
@@ -185,6 +210,15 @@ func parsePullRequestListResponse(respBytes []byte) ([]*models.GithubPullRequest
 			ChangedFiles:        node.ChangedFiles,
 			CommentCount:        node.Comments.TotalCount,
 			UpdatedAt:           node.UpdatedAt,
+			Assignees: lo.Map(node.Assignees.Nodes, func(owner GithubRepositoryOwner, _ int) string {
+				return owner.Login
+			}),
+			ReviewRequests: lo.Map(node.ReviewRequests.Nodes, func(request pullRequestReviewRequestNode, _ int) string {
+				return lo.CoalesceOrEmpty(request.RequestedReviewer.Login, request.RequestedReviewer.CombinedSlug)
+			}),
+			Labels: lo.Map(node.Labels.Nodes, func(label pullRequestLabelNode, _ int) string {
+				return label.Name
+			}),
 		}, true
 	}), nil
 }
@@ -356,4 +390,53 @@ func (self *GitHubCommands) CommentOnPullRequestLines(repo hosting_service.Servi
 	}
 
 	return cmdObj.Run()
+}
+
+type PullRequestEdit string
+
+const (
+	PullRequestEditAddReviewer    PullRequestEdit = "--add-reviewer"
+	PullRequestEditRemoveReviewer PullRequestEdit = "--remove-reviewer"
+	PullRequestEditAddAssignee    PullRequestEdit = "--add-assignee"
+	PullRequestEditRemoveAssignee PullRequestEdit = "--remove-assignee"
+	PullRequestEditAddLabel       PullRequestEdit = "--add-label"
+	PullRequestEditRemoveLabel    PullRequestEdit = "--remove-label"
+	PullRequestEditTitle          PullRequestEdit = "--title"
+)
+
+// EditPullRequest makes a single edit to a pull request. For assignees, "@me"
+// stands for the logged in user.
+func (self *GitHubCommands) EditPullRequest(repo hosting_service.ServiceInfo, number int, edit PullRequestEdit, value string) error {
+	return self.runPullRequestCommand(repo, number, "edit", string(edit), value)
+}
+
+// ListAssignableUsers returns the logins of the users that can be assigned to
+// the repo's pull requests or asked to review them.
+func (self *GitHubCommands) ListAssignableUsers(repo hosting_service.ServiceInfo) ([]string, error) {
+	return self.runGhForLines(
+		"api", "--hostname", repo.WebDomain, "--paginate",
+		fmt.Sprintf("repos/%s/assignees", repo.RepoName),
+		"--jq", ".[].login",
+	)
+}
+
+func (self *GitHubCommands) ListLabels(repo hosting_service.ServiceInfo) ([]string, error) {
+	return self.runGhForLines(
+		"label", "list", "--repo", ghRepoArg(repo), "--limit", "1000",
+		"--json", "name", "--jq", ".[].name",
+	)
+}
+
+func (self *GitHubCommands) runGhForLines(args ...string) ([]string, error) {
+	cmdObj, err := self.ghCmdObj(args...)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := cmdObj.DontLog().RunWithOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Compact(strings.Split(strings.TrimSpace(output), "\n")), nil
 }

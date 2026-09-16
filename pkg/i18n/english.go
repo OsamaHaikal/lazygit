@@ -428,6 +428,20 @@ type TranslationSet struct {
 	NotViewingPullRequestDiff             string
 	NoFileLinesSelected                   string
 	PullRequestCommentAdded               string
+	EditPullRequestOptions                string
+	EditPullRequestTooltip                string
+	RequestReview                         string
+	RemoveReviewRequest                   string
+	AssignToMe                            string
+	AddAssignee                           string
+	RemoveAssignee                        string
+	AddLabel                              string
+	RemoveLabel                           string
+	EditPullRequestTitle                  string
+	NoReviewRequests                      string
+	NoAssignees                           string
+	NoLabels                              string
+	LoadingSuggestions                    string
 	ReviewPullRequestOptions              string
 	ApprovePullRequest                    string
 	RequestPullRequestChanges             string
@@ -1201,6 +1215,7 @@ type Actions struct {
 	ConvertPullRequestToDraft        string
 	CommentOnPullRequest             string
 	ReviewPullRequest                string
+	EditPullRequest                  string
 	CommentOnPullRequestLines        string
 	StartBisect                      string
 	ResetBisect                      string
@@ -1665,6 +1680,20 @@ func EnglishTranslationSet() *TranslationSet {
 		NotViewingPullRequestDiff:            "Only lines of a pull request's diff, or of one of its commits, can be commented on",
 		NoFileLinesSelected:                  "The selection doesn't contain any lines of the file",
 		PullRequestCommentAdded:              "Comment added",
+		EditPullRequestOptions:               "Edit pull request",
+		EditPullRequestTooltip:               "Request or remove reviews, change assignees and labels, or edit the title.",
+		RequestReview:                        "Request review",
+		RemoveReviewRequest:                  "Remove review request",
+		AssignToMe:                           "Assign to me",
+		AddAssignee:                          "Add assignee",
+		RemoveAssignee:                       "Remove assignee",
+		AddLabel:                             "Add label",
+		RemoveLabel:                          "Remove label",
+		EditPullRequestTitle:                 "Edit title",
+		NoReviewRequests:                     "No reviews are requested",
+		NoAssignees:                          "Nobody is assigned",
+		NoLabels:                             "There are no labels",
+		LoadingSuggestions:                   "Loading suggestions",
 		ReviewPullRequestOptions:             "Review pull request",
 		ApprovePullRequest:                   "Approve",
 		RequestPullRequestChanges:            "Request changes",
@@ -2393,6 +2422,7 @@ func EnglishTranslationSet() *TranslationSet {
 			ConvertPullRequestToDraft:        "Convert pull request to draft",
 			CommentOnPullRequest:             "Comment on pull request",
 			ReviewPullRequest:                "Review pull request",
+			EditPullRequest:                  "Edit pull request",
 			CommentOnPullRequestLines:        "Comment on pull request lines",
 			StartBisect:                      "Start bisect",
 			ResetBisect:                      "Reset bisect",

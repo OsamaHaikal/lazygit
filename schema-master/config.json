@@ -2190,6 +2190,20 @@
             }
           ],
           "default": "F"
+        },
+        "edit": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "e"
         }
       },
       "additionalProperties": false,

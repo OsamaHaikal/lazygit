@@ -680,6 +680,7 @@ type KeybindingPullRequestsConfig struct {
 	CloseOrReopen Keybinding `yaml:"closeOrReopen"`
 	Filter        Keybinding `yaml:"filter"`
 	ViewFiles     Keybinding `yaml:"viewFiles"`
+	Edit          Keybinding `yaml:"edit"`
 }
 
 type KeybindingCommitMessageConfig struct {
@@ -1198,6 +1199,7 @@ func GetDefaultConfigForPlatform(platform string) *UserConfig {
 				CloseOrReopen: Keybinding{"d"},
 				Filter:        Keybinding{"f"},
 				ViewFiles:     Keybinding{"F"},
+				Edit:          Keybinding{"e"},
 			},
 			CommitMessage: KeybindingCommitMessageConfig{
 				CommitMenu: Keybinding{"<ctrl+o>"},

@@ -26,6 +26,11 @@ type GithubPullRequest struct {
 	ChangedFiles   int
 	CommentCount   int
 	UpdatedAt      time.Time
+	Assignees      []string
+	// The users and teams whose review has been requested and who haven't
+	// reviewed yet
+	ReviewRequests []string
+	Labels         []string
 }
 
 func (pr *GithubPullRequest) ID() string {

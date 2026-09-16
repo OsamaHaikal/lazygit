@@ -7,7 +7,8 @@ import (
 
 // The pull requests panel talks to GitHub through gh, so the tests put a fake
 // gh in its place. It answers the GraphQL query with pullRequestsJson, prints a
-// placeholder for `gh pr view`, and appends the arguments of every other
+// placeholder for `gh pr view`, lists some users and labels as suggestions, and
+// appends the arguments of every other
 // invocation to gh-calls.txt in the repo so tests can check what was run. The
 // search query of each GraphQL request goes to gh-searches.txt.
 //
@@ -45,7 +46,8 @@ const pullRequestsJson = `{"data":{"search":{"nodes":[
 		"author": {"login": "alice"},
 		"headRepositoryOwner": {"login": "owner"},
 		"comments": {"totalCount": 0},
-		"commits": {"nodes": [{"commit": {"statusCheckRollup": {"state": "SUCCESS"}}}]}
+		"commits": {"nodes": [{"commit": {"statusCheckRollup": {"state": "SUCCESS"}}}]},
+		"labels": {"nodes": [{"name": "enhancement"}]}
 	},
 	{
 		"number": 11,
@@ -71,6 +73,17 @@ func setupGhRepo(shell *Shell) {
 
 	shell.CreateFile("../bin/pull_requests.json", pullRequestsJson)
 	shell.CreateFile("../bin/gh", `#!/bin/sh
+case "$*" in
+*/assignees*)
+    printf "alice\ncarol\n"
+    exit 0
+    ;;
+"label list"*)
+    printf "bug\nenhancement\n"
+    exit 0
+    ;;
+esac
+
 case "$1 $2" in
 "auth token")
     echo fake-token

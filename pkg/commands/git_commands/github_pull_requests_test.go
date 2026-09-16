@@ -62,7 +62,10 @@ func TestListPullRequests(t *testing.T) {
 			"author": {"login": "alice"},
 			"headRepositoryOwner": {"login": "alice"},
 			"comments": {"totalCount": 4},
-			"commits": {"nodes": [{"commit": {"statusCheckRollup": {"state": "SUCCESS"}}}]}
+			"commits": {"nodes": [{"commit": {"statusCheckRollup": {"state": "SUCCESS"}}}]},
+			"assignees": {"nodes": [{"login": "alice"}]},
+			"reviewRequests": {"nodes": [{"requestedReviewer": {"login": "carol"}}, {"requestedReviewer": {"combinedSlug": "jesseduffield/maintainers"}}]},
+			"labels": {"nodes": [{"name": "enhancement"}]}
 		},
 		{
 			"number": 11,
@@ -110,6 +113,9 @@ func TestListPullRequests(t *testing.T) {
 			ChangedFiles:        3,
 			CommentCount:        4,
 			UpdatedAt:           time.Date(2026, 9, 16, 14, 0, 27, 0, time.UTC),
+			Assignees:           []string{"alice"},
+			ReviewRequests:      []string{"carol", "jesseduffield/maintainers"},
+			Labels:              []string{"enhancement"},
 		},
 		{
 			Number:              11,
@@ -118,6 +124,9 @@ func TestListPullRequests(t *testing.T) {
 			State:               "DRAFT",
 			HeadRepositoryOwner: models.GithubRepositoryOwner{Login: "bob"},
 			Author:              "bob",
+			Assignees:           []string{},
+			ReviewRequests:      []string{},
+			Labels:              []string{},
 		},
 	}, prs)
 }
@@ -282,4 +291,33 @@ func TestCommentOnPullRequestLines(t *testing.T) {
 			runner.CheckForMissingCalls()
 		})
 	}
+}
+
+func TestEditPullRequest(t *testing.T) {
+	t.Setenv("GH_PATH", "gh")
+
+	runner := oscommands.NewFakeRunner(t).
+		ExpectArgs([]string{"gh", "pr", "edit", "12", "--repo", "github.com/jesseduffield/lazygit", "--add-reviewer", "jesseduffield/maintainers"}, "", nil)
+	instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+	assert.NoError(t, instance.EditPullRequest(testGithubRepo, 12, PullRequestEditAddReviewer, "jesseduffield/maintainers"))
+	runner.CheckForMissingCalls()
+}
+
+func TestListAssignableUsersAndLabels(t *testing.T) {
+	t.Setenv("GH_PATH", "gh")
+
+	runner := oscommands.NewFakeRunner(t).
+		ExpectArgs([]string{"gh", "api", "--hostname", "github.com", "--paginate", "repos/jesseduffield/lazygit/assignees", "--jq", ".[].login"}, "alice\nbob\n", nil).
+		ExpectArgs([]string{"gh", "label", "list", "--repo", "github.com/jesseduffield/lazygit", "--limit", "1000", "--json", "name", "--jq", ".[].name"}, "", nil)
+	instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
+
+	users, err := instance.ListAssignableUsers(testGithubRepo)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"alice", "bob"}, users)
+
+	labels, err := instance.ListLabels(testGithubRepo)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{}, labels)
+	runner.CheckForMissingCalls()
 }
