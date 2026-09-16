@@ -438,6 +438,9 @@ type PullRequestGuideState struct {
 	// The provider writing the guide, and since when
 	Provider  string
 	StartedAt time.Time
+	// The latest things the provider said it's doing while writing the guide,
+	// oldest first
+	Progress []string
 }
 
 func (self *PullRequestGuideState) IsGenerating() bool {

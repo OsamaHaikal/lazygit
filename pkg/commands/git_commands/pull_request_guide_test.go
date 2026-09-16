@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
@@ -127,17 +128,23 @@ func TestValidateGuide(t *testing.T) {
 
 func TestGeneratePullRequestGuideWithClaude(t *testing.T) {
 	diff := "diff --git a/a.go b/a.go\n--- a/a.go\n+++ b/a.go\n@@ -1 +1 @@\n-x\n+y\n"
-	claudeOutput := `{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Rename x", "explanation": "x becomes y", "hunks": ["f0-h0"]}]}}`
+	claudeOutput := `{"type": "system", "subtype": "init"}
+{"type": "assistant", "message": {"content": [{"type": "text", "text": "Progress: Reading the renamed variable's uses"}]}}
+{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Rename x", "explanation": "x becomes y", "hunks": ["f0-h0"]}]}}
+`
 
+	var progress []string
 	runner := oscommands.NewFakeRunner(t).
 		ExpectGitArgs([]string{"-c", "core.quotePath=false", "-c", "diff.noprefix=false", "diff", "--no-ext-diff", "--no-color", "--find-renames", "base123", "head456"}, diff, nil).
 		ExpectFunc("claude with the guide prompt", func(cmdObj *oscommands.CmdObj) bool {
 			args := cmdObj.Args()
-			stdin := cmdObj.GetCmd().Stdin
 			return args[0] == "claude" && args[1] == "-p" &&
+				slices.Contains(args, "stream-json") &&
 				slices.Contains(args, "--json-schema") &&
 				slices.Equal(args[len(args)-2:], []string{"--model", "sonnet"}) &&
-				stdin != nil
+				cmdObj.GetCmd().Stdin != nil &&
+				// It runs outside of the repo
+				cmdObj.GetCmd().Dir != ""
 		}, claudeOutput, nil)
 	instance := NewGitHubCommands(buildGitCommon(commonDeps{runner: runner}))
 
@@ -145,10 +152,12 @@ func TestGeneratePullRequestGuideWithClaude(t *testing.T) {
 		Provider: GuideProviderClaude, Model: "sonnet",
 		Number: 12, Title: "Rename", Description: "Renames x",
 		MergeBase: "base123", Head: "head456",
+		OnProgress: func(message string) { progress = append(progress, message) },
 	})
 	assert.NoError(t, err)
 	runner.CheckForMissingCalls()
 
+	assert.Equal(t, []string{"Reading the renamed variable's uses"}, progress)
 	assert.Equal(t, &PullRequestGuide{
 		Chapters: []GuideChapter{{Title: "Rename x", Explanation: "x becomes y", UnitIDs: []string{"f0-h0"}}},
 		Files: []GuideFile{{Path: "a.go", Units: []GuideReviewUnit{
@@ -157,6 +166,59 @@ func TestGeneratePullRequestGuideWithClaude(t *testing.T) {
 		Provider: GuideProviderClaude,
 		Model:    "sonnet",
 	}, guide)
+}
+
+func TestParseCodexGuideEvent(t *testing.T) {
+	cases := []struct {
+		line             string
+		expectedProgress string
+		expectedGuide    string
+	}{
+		{`{"type":"turn.started"}`, "", ""},
+		{`{"type":"item.completed","item":{"type":"agent_message","text":"Progress: Grouping the hunks into chapters."}}`, "Grouping the hunks into chapters.", ""},
+		{`{"type":"item.started","item":{"type":"command_execution","command":"/bin/zsh -lc 'git -C /repo show abc:main.go'"}}`, "Running git show abc:main.go", ""},
+		{`{"type":"item.started","item":{"type":"command_execution","command":"/bin/zsh -lc \"git -C /repo show abc:a.yml | nl -ba\n  | sed -n '1,9p'\""}}`, "Running git show abc:a.yml | nl -ba | sed -n '1,9p'", ""},
+		{`{"type":"item.completed","item":{"type":"reasoning","text":"**Reviewing workflow changes**\n\nI need to look at..."}}`, "Reviewing workflow changes", ""},
+		{`{"type":"item.completed","item":{"type":"reasoning","text":"I need to look at the workflows"}}`, "", ""},
+		{`{"type":"item.completed","item":{"type":"command_execution","command":"/bin/zsh -lc 'git log'"}}`, "", ""},
+		{`{"type":"item.completed","item":{"type":"agent_message","text":"{\"chapters\":[]}"}}`, "", `{"chapters":[]}`},
+		{`not json`, "", ""},
+	}
+
+	for _, c := range cases {
+		progress, guide := parseCodexGuideEvent(c.line, "/repo")
+		assert.Equal(t, c.expectedProgress, progress, c.line)
+		assert.Equal(t, c.expectedGuide, guide, c.line)
+	}
+}
+
+func TestParseClaudeGuideEvent(t *testing.T) {
+	cases := []struct {
+		line             string
+		expectedProgress string
+		expectedGuide    string
+		expectedError    string
+	}{
+		{`{"type":"system","subtype":"init"}`, "", "", ""},
+		{`{"type":"assistant","message":{"content":[{"type":"text","text":"Progress: Checking the callers"}]}}`, "Checking the callers", "", ""},
+		{`{"type":"assistant","message":{"content":[{"type":"text","text":"Let me look"}]}}`, "", "", ""},
+		{`{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"git -C /repo show abc:main.go"}}]}}`, "Running git show abc:main.go", "", ""},
+		{`{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"/repo/pkg/main.go"}}]}}`, "Reading pkg/main.go", "", ""},
+		{`{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"git -C /repo log --oneline ` + strings.Repeat("x", 200) + `"}}]}}`, "Running git log --oneline " + strings.Repeat("x", 81) + "…", "", ""},
+		{`{"type":"result","is_error":false,"structured_output":{"chapters":[]}}`, "", `{"chapters":[]}`, ""},
+		{`{"type":"result","is_error":true,"result":"Credit balance is too low"}`, "", "", "claude couldn't write the guide: Credit balance is too low"},
+	}
+
+	for _, c := range cases {
+		progress, guide, err := parseClaudeGuideEvent(c.line, "/repo")
+		assert.Equal(t, c.expectedProgress, progress, c.line)
+		assert.Equal(t, c.expectedGuide, guide, c.line)
+		if c.expectedError == "" {
+			assert.NoError(t, err, c.line)
+		} else {
+			assert.EqualError(t, err, c.expectedError, c.line)
+		}
+	}
 }
 
 func TestResolveGuideProvider(t *testing.T) {

@@ -60,3 +60,19 @@ func FormatElapsed(elapsed time.Duration) string {
 	seconds := int(elapsed.Seconds())
 	return fmt.Sprintf("%d:%02d", seconds/60, seconds%60)
 }
+
+// FormatGuideProgress lists what the AI said it's doing while writing a guide,
+// with the latest thing highlighted.
+func FormatGuideProgress(progress []string) string {
+	if len(progress) == 0 {
+		return ""
+	}
+
+	lines := lo.Map(progress, func(message string, i int) string {
+		if i == len(progress)-1 {
+			return style.FgCyan.Sprint("› " + message)
+		}
+		return style.FgDefault.Sprint("  " + message)
+	})
+	return "\n\n" + strings.Join(lines, "\n")
+}

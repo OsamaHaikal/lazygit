@@ -92,7 +92,7 @@ func (self *PullRequestGuideController) mainViewContent() string {
 			"provider": lo.CoalesceOrEmpty(state.Provider, self.c.UserConfig().Git.PullRequestGuide.Provider),
 			"number":   number,
 			"elapsed":  presentation.FormatElapsed(time.Since(state.StartedAt)),
-		})
+		}) + presentation.FormatGuideProgress(state.Progress)
 	}
 
 	chapter := self.context().GetSelected()

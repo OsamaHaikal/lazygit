@@ -35,12 +35,10 @@ var PullRequestGuide = NewIntegrationTest(NewIntegrationTestArgs{
 		// with a chapter for each of the pull request's hunks
 		shell.CreateFile("../bin/claude", `#!/bin/sh
 cat > /dev/null
-echo "$@" | grep -o -- "--model [a-z]*" >> claude-calls.txt
+echo "$@" | grep -o -- "--model [a-z]*" >> "$(dirname "$0")/claude-calls.txt"
 cat <<'GUIDE'
-{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [
-	{"title": "Add the feature", "explanation": "Creates `+"`feature.txt`"+` with the improved feature.", "hunks": ["f1-h0"]},
-	{"title": "Document the feature", "explanation": "Explains how to use it.", "hunks": ["f0-h0"]}
-]}}
+{"type": "assistant", "message": {"content": [{"type": "text", "text": "Progress: Grouping the hunks"}]}}
+{"type": "result", "is_error": false, "result": "", "structured_output": {"chapters": [{"title": "Add the feature", "explanation": "Creates `+"`feature.txt`"+` with the improved feature.", "hunks": ["f1-h0"]}, {"title": "Document the feature", "explanation": "Explains how to use it.", "hunks": ["f0-h0"]}]}}
 GUIDE
 `)
 		shell.MakeExecutable("../bin/claude")
@@ -121,6 +119,6 @@ GUIDE
 				Equals("2. Document the feature"),
 			)
 
-		t.FileSystem().FileContent("claude-calls.txt", Equals("--model sonnet\n"))
+		t.FileSystem().FileContent("../bin/claude-calls.txt", Equals("--model sonnet\n"))
 	},
 })

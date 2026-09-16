@@ -17,6 +17,10 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
+// How many of the things the AI says it's doing are shown while it writes a
+// guide
+const maxGuideProgressLines = 5
+
 // ShowGuide shows the AI-written guide to the pull request at the given head,
 // writing one first if there isn't one yet. Must be called on the UI thread.
 func (self *PullRequestsHelper) ShowGuide(pr *models.GithubPullRequest, head *models.PullRequestHead) {
@@ -79,9 +83,18 @@ func (self *PullRequestsHelper) writeGuide(pr *models.GithubPullRequest, head *m
 	done := make(chan struct{})
 	self.c.OnWorkerBackground(func(gocui.Task) error {
 		defer close(done)
-		guide, err := self.getGuide(git, repo, pr, head, guideConfig, force, func(provider string) {
-			onUIThread(func() { state.Provider = provider })
-		})
+		guide, err := self.getGuide(git, repo, pr, head, guideConfig, force,
+			func(provider string) {
+				onUIThread(func() { state.Provider = provider })
+			},
+			func(progress string) {
+				onUIThread(func() {
+					state.Progress = append(state.Progress, progress)
+					state.Progress = state.Progress[max(len(state.Progress)-maxGuideProgressLines, 0):]
+					self.rerenderGuideWhileWriting(pr.Number)
+				})
+			},
+		)
 
 		onUIThread(func() {
 			state.Guide, state.Err = guide, err
@@ -110,6 +123,7 @@ func (self *PullRequestsHelper) getGuide(
 	guideConfig config.PullRequestGuideConfig,
 	force bool,
 	onProviderResolved func(string),
+	onProgress func(string),
 ) (*git_commands.PullRequestGuide, error) {
 	provider, err := git.GitHub.ResolveGuideProvider(guideConfig.Provider)
 	if errors.Is(err, git_commands.ErrNoGuideProvider) {
@@ -133,6 +147,7 @@ func (self *PullRequestsHelper) getGuide(
 		Description: description,
 		MergeBase:   head.MergeBaseOid,
 		Head:        head.RefName(),
+		OnProgress:  onProgress,
 	}
 	cachePath, cachePathErr := config.PullRequestGuideCachePath(git_commands.GuideCacheKey(opts))
 
@@ -167,13 +182,18 @@ func (self *PullRequestsHelper) rerenderWhileWritingGuide(number int, done <-cha
 		case <-done:
 			return
 		case <-ticker.C:
-			onUIThread(func() {
-				guideContext := self.c.Contexts().PullRequestGuide
-				if self.c.Context().IsCurrent(guideContext) && guideContext.GetNumber() == number {
-					guideContext.HandleRenderToMain()
-				}
-			})
+			onUIThread(func() { self.rerenderGuideWhileWriting(number) })
 		}
+	}
+}
+
+// rerenderGuideWhileWriting shows the latest elapsed time and progress of the
+// guide being written, if it's being looked at. Must be called on the UI
+// thread.
+func (self *PullRequestsHelper) rerenderGuideWhileWriting(number int) {
+	guideContext := self.c.Contexts().PullRequestGuide
+	if self.c.Context().IsCurrent(guideContext) && guideContext.GetNumber() == number {
+		guideContext.HandleRenderToMain()
 	}
 }
 
